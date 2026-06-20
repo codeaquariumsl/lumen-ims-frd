@@ -67,8 +67,11 @@ export function DashboardSidebar() {
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="border-b border-gray-800 p-4">
-            <h1 className="text-2xl font-bold">Lumen Optical</h1>
+          <div className="border-b border-gray-800 p-4 flex flex-col items-center text-center">
+            {/* <div className="bg-white p-2 rounded-lg mb-3 w-full flex justify-center">
+              <img src="/assets/logo.jpg" alt="Lumen Optical Logo" className="h-16 w-auto object-contain" />
+            </div> */}
+            <h1 className="text-xl font-bold">Lumen Optical</h1>
             <p className="mt-1 text-xs text-gray-400">Management Information System</p>
           </div>
 
