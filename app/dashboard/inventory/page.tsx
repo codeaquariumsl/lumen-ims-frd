@@ -22,6 +22,7 @@ interface InventoryItem {
 
 export default function InventoryPage() {
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -81,10 +82,15 @@ export default function InventoryPage() {
   const lowStockItems = inventory.filter((item) => item.quantity <= item.minStock);
   const overStockItems = inventory.filter((item) => item.quantity >= item.maxStock);
 
-  const handleAddItem = async () => {
+  const handleSaveItem = async () => {
     if (formData.code && formData.name) {
       try {
-        const response = await apiClient.post('/products', formData);
+        let response;
+        if (editingItemId) {
+          response = await apiClient.put(`/products/${editingItemId}`, formData);
+        } else {
+          response = await apiClient.post('/products', formData);
+        }
         if (response.data?.success) {
           setFormData({
             code: '',
@@ -97,12 +103,29 @@ export default function InventoryPage() {
             sellingPrice: 0,
           });
           setIsAddingItem(false);
+          setEditingItemId(null);
           fetchInventory();
         }
       } catch (error) {
-        console.error('Error adding inventory item:', error);
+        console.error('Error saving inventory item:', error);
       }
     }
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setFormData({
+      code: item.code,
+      name: item.name,
+      category: item.category,
+      quantity: item.quantity,
+      minStock: item.minStock,
+      maxStock: item.maxStock,
+      costPrice: item.costPrice,
+      sellingPrice: item.sellingPrice,
+    });
+    setEditingItemId(item.id);
+    setIsAddingItem(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -131,7 +154,10 @@ export default function InventoryPage() {
           <p className="mt-2 text-gray-600">Track products, stock levels, and warehouse management</p>
         </div>
         <Button
-          onClick={() => setIsAddingItem(!isAddingItem)}
+          onClick={() => {
+            setIsAddingItem(!isAddingItem);
+            if (isAddingItem) setEditingItemId(null);
+          }}
           className="bg-indigo-600 hover:bg-indigo-700"
         >
           <Plus size={20} />
@@ -164,67 +190,93 @@ export default function InventoryPage() {
       {/* Add Item Form */}
       {isAddingItem && (
         <Card className="p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Add New Inventory Item</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            {editingItemId ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+          </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <Input
-              placeholder="Item Code (e.g., FR-001)"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-            />
-            <Input
-              placeholder="Item Name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <Input
-              type="number"
-              placeholder="Current Quantity"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-            />
-            <Input
-              type="number"
-              placeholder="Min Stock Level"
-              value={formData.minStock}
-              onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) })}
-            />
-            <Input
-              type="number"
-              placeholder="Max Stock Level"
-              value={formData.maxStock}
-              onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) })}
-            />
-            <Input
-              type="number"
-              placeholder="Cost Price"
-              value={formData.costPrice}
-              onChange={(e) => setFormData({ ...formData, costPrice: parseFloat(e.target.value) })}
-              step="0.01"
-            />
-            <Input
-              type="number"
-              placeholder="Selling Price"
-              value={formData.sellingPrice}
-              onChange={(e) => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })}
-              step="0.01"
-            />
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Item Code</label>
+              <Input
+                placeholder="Item Code (e.g., FR-001)"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Item Name</label>
+              <Input
+                placeholder="Item Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1 flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="px-3 py-2 border border-gray-300 rounded-lg flex-1"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Current Quantity</label>
+              <Input
+                type="number"
+                placeholder="Current Quantity"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Min Stock Level</label>
+              <Input
+                type="number"
+                placeholder="Min Stock Level"
+                value={formData.minStock}
+                onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Max Stock Level</label>
+              <Input
+                type="number"
+                placeholder="Max Stock Level"
+                value={formData.maxStock}
+                onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Cost Price</label>
+              <Input
+                type="number"
+                placeholder="Cost Price"
+                value={formData.costPrice}
+                onChange={(e) => setFormData({ ...formData, costPrice: parseFloat(e.target.value) })}
+                step="0.01"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Selling Price</label>
+              <Input
+                type="number"
+                placeholder="Selling Price"
+                value={formData.sellingPrice}
+                onChange={(e) => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })}
+                step="0.01"
+              />
+            </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <Button onClick={handleAddItem} className="bg-green-600 hover:bg-green-700">
-              Save Item
+            <Button onClick={handleSaveItem} className="bg-green-600 hover:bg-green-700">
+              {editingItemId ? 'Update Item' : 'Save Item'}
             </Button>
-            <Button onClick={() => setIsAddingItem(false)} variant="outline">
+            <Button onClick={() => { setIsAddingItem(false); setEditingItemId(null); }} variant="outline">
               Cancel
             </Button>
           </div>
@@ -311,6 +363,7 @@ export default function InventoryPage() {
                     <Button
                       size="sm"
                       className="bg-blue-600 hover:bg-blue-700"
+                      onClick={() => handleEditItem(item)}
                     >
                       <Edit size={16} />
                     </Button>
