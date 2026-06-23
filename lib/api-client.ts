@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = '/api/proxy';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

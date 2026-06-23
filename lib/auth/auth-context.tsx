@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await apiClient.post('/auth/login', { email, password });
-      
+
       if (response.data?.success && response.data?.data) {
         const { user: userData, token } = response.data.data;
         setUser(userData);
