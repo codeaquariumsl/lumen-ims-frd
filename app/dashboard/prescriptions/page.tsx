@@ -30,6 +30,8 @@ interface Prescription {
   os_cyl: number;
   os_axis: number;
   pd: number;
+  fittingHeight?: number;
+  segmentHeight?: number;
   prescriptionType: string;
 }
 
@@ -68,6 +70,8 @@ export default function PrescriptionsPage() {
     os_cyl: 0,
     os_axis: 0,
     pd: 62,
+    fittingHeight: '',
+    segmentHeight: '',
   });
 
   const calculateAge = (birthDate: string): number => {
@@ -124,6 +128,8 @@ export default function PrescriptionsPage() {
           os_cyl: parseFloat(p.os_cyl || '0'),
           os_axis: p.os_axis || 0,
           pd: parseFloat(p.pd || '62'),
+          fittingHeight: p.fitting_height ? parseFloat(p.fitting_height) : undefined,
+          segmentHeight: p.segment_height ? parseFloat(p.segment_height) : undefined,
           prescriptionType: p.prescription_type || 'single'
         }));
         setPrescriptions(mapped);
@@ -204,7 +210,9 @@ export default function PrescriptionsPage() {
           os_sph: formData.os_sph,
           os_cyl: formData.os_cyl,
           os_axis: formData.os_axis,
-          pd: formData.pd
+          pd: formData.pd,
+          fittingHeight: formData.fittingHeight ? parseFloat(formData.fittingHeight) : undefined,
+          segmentHeight: formData.segmentHeight ? parseFloat(formData.segmentHeight) : undefined,
         };
 
         const response = await apiClient.post('/prescriptions', payload);
@@ -222,6 +230,8 @@ export default function PrescriptionsPage() {
             os_cyl: 0,
             os_axis: 0,
             pd: 62,
+            fittingHeight: '',
+            segmentHeight: '',
           });
           setIsAddingPrescription(false);
           fetchPrescriptions();
@@ -502,6 +512,36 @@ export default function PrescriptionsPage() {
                 className="max-w-xs"
               />
             </div>
+
+            {/* Additional Measurements for Bifocal/Progressive */}
+            {(formData.prescriptionType === 'bifocal' || formData.prescriptionType === 'progressive') && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fitting Height (mm)
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.fittingHeight}
+                    onChange={(e) => setFormData({ ...formData, fittingHeight: e.target.value })}
+                    placeholder="e.g., 22.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Segment Height (mm)
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={formData.segmentHeight}
+                    onChange={(e) => setFormData({ ...formData, segmentHeight: e.target.value })}
+                    placeholder="e.g., 18.0"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-2">
