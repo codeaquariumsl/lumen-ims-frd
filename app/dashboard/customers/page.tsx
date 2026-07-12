@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, X } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 
 interface Customer {
@@ -28,6 +28,10 @@ export default function CustomersPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isViewingCustomer, setIsViewingCustomer] = useState(false);
+  const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -97,9 +101,15 @@ export default function CustomersPage() {
           city: formData.city,
           dateOfBirth: formData.birthday || undefined
         };
-        const response = await apiClient.post('/customers', payload);
+        let response;
+        if (editingId) {
+          response = await apiClient.put(`/customers/${editingId}`, payload);
+        } else {
+          response = await apiClient.post('/customers', payload);
+        }
         if (response.data?.success) {
           setFormData({ firstName: '', lastName: '', phone: '', email: '', city: '', birthday: '' });
+          setEditingId(null);
           setIsAddingCustomer(false);
           setCurrentPage(1);
           fetchCustomers();
@@ -108,6 +118,20 @@ export default function CustomersPage() {
         console.error('Error adding customer:', error);
       }
     }
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingId(customer.id);
+    setFormData({
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      phone: customer.phone,
+      email: customer.email,
+      city: customer.city,
+      birthday: customer.birthday || '',
+    });
+    setIsAddingCustomer(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteCustomer = async (id: string) => {
@@ -148,11 +172,11 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Add Customer Form */}
+      {/* Add/Edit Customer Form */}
       {isAddingCustomer && (
         <Card className="p-6 bg-gradient-to-br from-pink-50 to-blue-50 border-2 border-purple-200 shadow-lg">
           <h2 className="mb-6 text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Add New Customer
+            {editingId ? 'Edit Customer' : 'Add New Customer'}
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <Input
@@ -190,9 +214,16 @@ export default function CustomersPage() {
           </div>
           <div className="mt-4 flex gap-2">
             <Button onClick={handleAddCustomer} className="bg-green-600 hover:bg-green-700">
-              Save Customer
+              {editingId ? 'Update Customer' : 'Save Customer'}
             </Button>
-            <Button onClick={() => setIsAddingCustomer(false)} variant="outline">
+            <Button 
+              onClick={() => {
+                setIsAddingCustomer(false);
+                setEditingId(null);
+                setFormData({ firstName: '', lastName: '', phone: '', email: '', city: '', birthday: '' });
+              }} 
+              variant="outline"
+            >
               Cancel
             </Button>
           </div>
@@ -290,7 +321,22 @@ export default function CustomersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setViewingCustomer(customer);
+                            setIsViewingCustomer(true);
+                          }}
+                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        >
+                          <Eye size={16} />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleEditCustomer(customer)}
+                        >
                           <Edit size={16} />
                         </Button>
                         <Button
@@ -351,6 +397,66 @@ export default function CustomersPage() {
               Next
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* View Customer Modal */}
+      {isViewingCustomer && viewingCustomer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Customer Details</h2>
+              <button
+                onClick={() => {
+                  setIsViewingCustomer(false);
+                  setViewingCustomer(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-semibold text-gray-900">{viewingCustomer.firstName} {viewingCustomer.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Customer ID</p>
+                  <p className="font-semibold text-gray-900">{viewingCustomer.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <a href={`tel:${viewingCustomer.phone}`} className="font-semibold text-blue-600 hover:underline">{viewingCustomer.phone}</a>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <a href={`mailto:${viewingCustomer.email}`} className="font-semibold text-blue-600 hover:underline">{viewingCustomer.email || 'N/A'}</a>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">City</p>
+                  <p className="font-semibold text-gray-900">{viewingCustomer.city || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Date of Birth</p>
+                  <p className="font-semibold text-gray-900">{viewingCustomer.birthday ? new Date(viewingCustomer.birthday).toLocaleDateString('en-IN') : 'N/A'} {viewingCustomer.birthday && `(${calculateAge(viewingCustomer.birthday)} yrs)`}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Total Spent</p>
+                  <p className="text-lg font-bold text-green-600">LKR.{viewingCustomer.totalSpent.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Last Visit</p>
+                  <p className="text-lg font-medium">{viewingCustomer.lastVisit}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       )}
     </div>

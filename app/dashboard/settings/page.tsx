@@ -43,6 +43,9 @@ export default function SettingsPage() {
         ...prev,
         ...user.companyDetails
       }));
+      if (user.companyDetails.logo) {
+        setLogoPreview(user.companyDetails.logo);
+      }
     }
     
     // Optionally fetch latest settings
@@ -76,6 +79,10 @@ export default function SettingsPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
+        setFormData((prev) => ({
+          ...prev,
+          logo: reader.result as string
+        }));
       };
       reader.readAsDataURL(file);
     }

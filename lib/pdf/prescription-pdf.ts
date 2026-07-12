@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { DEFAULT_LOGO } from './logo-base64';
 
 interface PrescriptionData {
   id: string;
@@ -19,7 +20,7 @@ interface PrescriptionData {
   prescriptionType: string;
 }
 
-export function generatePrescriptionPDF(prescription: PrescriptionData) {
+export function generatePrescriptionPDF(prescription: PrescriptionData, companyDetails?: any) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -42,25 +43,52 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
   doc.setFont(undefined, 'bold');
   doc.text('OPTICAL PRESCRIPTION', 20, 17);
 
-  // Company info - minimal styling
+  // Company info
   let currentY = 30;
-  doc.setTextColor(...colors.text);
-  doc.setFontSize(10);
-  doc.setFont(undefined, 'bold');
-  doc.text('Lumen Optical - Management Information System', 20, currentY);
 
+  const logoData = companyDetails?.logo || DEFAULT_LOGO;
+
+  if (logoData) {
+    try {
+      // Add logo aligned to the right. 
+      // Size: approx 30x30, keeping aspect ratio if possible. We use fixed box here.
+      doc.addImage(logoData, pageWidth - 50, 26, 24, 24);
+    } catch (e) {
+      console.error('Failed to add logo to PDF:', e);
+    }
+  }
+
+  doc.setTextColor(...colors.text);
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text(companyDetails?.companyName || 'Lumen Optical - Management Information System', 20, currentY);
+
+  currentY += 6;
   doc.setFont(undefined, 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setTextColor(...colors.textLight);
-  doc.text('Professional Eye Care Services', 20, currentY + 6);
+  doc.text(companyDetails?.address ? `${companyDetails.address}, ${companyDetails.city || ''}` : 'Professional Eye Care Services', 20, currentY);
+
+  if (companyDetails?.phone || companyDetails?.email) {
+    currentY += 5;
+    const contactInfo = [companyDetails?.phone, companyDetails?.email].filter(Boolean).join(' | ');
+    doc.text(contactInfo, 20, currentY);
+  }
+
+  if (companyDetails?.website) {
+    currentY += 5;
+    doc.text(companyDetails.website, 20, currentY);
+  }
+
+  currentY += 5;
 
   // Thin horizontal line
   doc.setDrawColor(...colors.border);
   doc.setLineWidth(0.5);
-  doc.line(20, currentY + 10, pageWidth - 20, currentY + 10);
+  doc.line(20, currentY + 5, pageWidth - 20, currentY + 5);
 
   // Prescription Details - two columns
-  currentY = 42;
+  currentY += 15;
   doc.setTextColor(...colors.text);
   doc.setFontSize(9);
   doc.setFont(undefined, 'bold');
@@ -73,17 +101,6 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
   doc.text('Issued Date:', 120, currentY);
   doc.setFont(undefined, 'normal');
   doc.text(new Date(prescription.prescriptionDate).toLocaleDateString('en-IN'), 155, currentY);
-
-  currentY += 7;
-  doc.setFont(undefined, 'bold');
-  doc.text('Type:', 20, currentY);
-  doc.setFont(undefined, 'normal');
-  doc.text(prescription.prescriptionType.charAt(0).toUpperCase() + prescription.prescriptionType.slice(1), 55, currentY);
-
-  doc.setFont(undefined, 'bold');
-  doc.text('Expiry Date:', 120, currentY);
-  doc.setFont(undefined, 'normal');
-  doc.text(new Date(prescription.expiryDate).toLocaleDateString('en-IN'), 155, currentY);
 
   // Patient Information - simple box
   currentY = 60;
@@ -107,6 +124,18 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
   doc.text('Name:', 23, currentY);
   doc.setFont(undefined, 'normal');
   doc.text(prescription.customerName, 55, currentY);
+
+  doc.setFont(undefined, 'bold');
+  doc.text('Expiry Date:', 120, currentY);
+  doc.setFont(undefined, 'normal');
+  doc.text(new Date(prescription.expiryDate).toLocaleDateString('en-IN'), 155, currentY);
+
+  currentY += 6;
+  doc.setFont(undefined, 'bold');
+  doc.text('Type:', 23, currentY);
+  doc.setFont(undefined, 'normal');
+  doc.text(prescription.prescriptionType.charAt(0).toUpperCase() + prescription.prescriptionType.slice(1), 55, currentY);
+
 
   if (prescription.age !== undefined) {
     currentY += 6;

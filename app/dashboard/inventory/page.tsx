@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, AlertCircle, BarChart3 } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle, BarChart3, Eye, X } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 
 interface InventoryItem {
@@ -27,6 +27,9 @@ export default function InventoryPage() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isViewingItem, setIsViewingItem] = useState(false);
+  const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
 
   const [formData, setFormData] = useState({
     code: '',
@@ -362,7 +365,18 @@ export default function InventoryPage() {
                   <td className="px-6 py-4 text-center flex justify-center gap-2">
                     <Button
                       size="sm"
-                      className="bg-blue-600 hover:bg-blue-700"
+                      variant="outline"
+                      onClick={() => {
+                        setViewingItem(item);
+                        setIsViewingItem(true);
+                      }}
+                      className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                    >
+                      <Eye size={16} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
                       onClick={() => handleEditItem(item)}
                     >
                       <Edit size={16} />
@@ -382,6 +396,81 @@ export default function InventoryPage() {
           </table>
         </div>
       </Card>
+
+      {/* View Item Modal */}
+      {isViewingItem && viewingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Inventory Item Details</h2>
+              <button
+                onClick={() => {
+                  setIsViewingItem(false);
+                  setViewingItem(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Item Code</p>
+                  <p className="font-semibold text-gray-900">{viewingItem.code}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Item Name</p>
+                  <p className="font-semibold text-gray-900">{viewingItem.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Category</p>
+                  <p className="font-semibold text-gray-900 capitalize">{viewingItem.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Last Updated</p>
+                  <p className="font-semibold text-gray-900">{viewingItem.lastUpdated || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Current Qty</p>
+                  <p className={`text-lg font-bold ${
+                    viewingItem.quantity <= viewingItem.minStock ? 'text-red-600' :
+                    viewingItem.quantity >= viewingItem.maxStock ? 'text-orange-600' :
+                    'text-green-600'
+                  }`}>{viewingItem.quantity}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Min Stock</p>
+                  <p className="text-lg font-medium text-gray-900">{viewingItem.minStock}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">Max Stock</p>
+                  <p className="text-lg font-medium text-gray-900">{viewingItem.maxStock}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <div>
+                  <p className="text-xs text-blue-700 uppercase font-semibold">Cost Price</p>
+                  <p className="text-lg font-bold text-gray-900">LKR.{viewingItem.costPrice.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-blue-700 uppercase font-semibold">Selling Price</p>
+                  <p className="text-lg font-bold text-gray-900">LKR.{viewingItem.sellingPrice.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t flex justify-end">
+                <p className="text-sm text-gray-600">Total Value in Stock: <span className="font-bold text-indigo-600">LKR.{(viewingItem.quantity * viewingItem.costPrice).toLocaleString()}</span></p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

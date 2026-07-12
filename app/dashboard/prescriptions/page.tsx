@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Edit, Trash2, Eye, Download, X } from 'lucide-react';
 import { generatePrescriptionPDF } from '@/lib/pdf/prescription-pdf';
 import apiClient from '@/lib/api-client';
+import { useAuth } from '@/lib/auth/auth-context';
 
 interface Customer {
   id: string;
@@ -36,6 +37,7 @@ interface Prescription {
 }
 
 export default function PrescriptionsPage() {
+  const { user } = useAuth();
   const [isAddingPrescription, setIsAddingPrescription] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -775,7 +777,7 @@ export default function PrescriptionsPage() {
                         <Button
                           size="sm"
                           className="bg-blue-600 hover:bg-blue-700"
-                          onClick={() => generatePrescriptionPDF(prescription)}
+                          onClick={() => generatePrescriptionPDF(prescription, user?.companyDetails)}
                         >
                           <Download size={16} />
                         </Button>

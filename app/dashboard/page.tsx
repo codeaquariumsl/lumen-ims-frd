@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [summaryStats, setSummaryStats] = useState<any>({
     totalTransactions: 0,
     avgBasketSize: 0,
-    conversionRate: 23.4,
+    conversionRate: 0,
     repeatCustomerRate: 0,
     customerLifetimeValue: 0
   });
@@ -60,7 +60,7 @@ export default function DashboardPage() {
           setSummaryStats(d.summaryStats || {
             totalTransactions: 0,
             avgBasketSize: 0,
-            conversionRate: 23.4,
+            conversionRate: 0,
             repeatCustomerRate: 0,
             customerLifetimeValue: 0
           });
@@ -71,11 +71,7 @@ export default function DashboardPage() {
             name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
             value: totalVal > 0 ? Math.round((parseFloat(item.value || '0') / totalVal) * 100) : 0
           }));
-          setCategoryData(formattedCategories.length > 0 ? formattedCategories : [
-            { name: 'Frames', value: 0 },
-            { name: 'Lenses', value: 0 },
-            { name: 'Accessories', value: 0 }
-          ]);
+          setCategoryData(formattedCategories.length > 0 ? formattedCategories : []);
         }
       } catch (error) {
         console.error('Error loading dashboard & analytics:', error);
