@@ -48,6 +48,10 @@ export default function PrescriptionsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isViewingPrescription, setIsViewingPrescription] = useState(false);
+  const [viewingPrescription, setViewingPrescription] = useState<Prescription | null>(null);
+
   const [newCustomerForm, setNewCustomerForm] = useState({
     name: '',
     email: '',
@@ -185,9 +189,9 @@ export default function PrescriptionsPage() {
 
   const handleSelectCustomer = (customer: Customer) => {
     const calculatedAge = customer.birthday ? calculateAge(customer.birthday) : '';
-    setFormData({ 
-      ...formData, 
-      customerId: customer.id, 
+    setFormData({
+      ...formData,
+      customerId: customer.id,
       customerName: customer.name,
       age: calculatedAge ? calculatedAge.toString() : '',
     });
@@ -215,7 +219,13 @@ export default function PrescriptionsPage() {
           segmentHeight: formData.segmentHeight ? parseFloat(formData.segmentHeight) : undefined,
         };
 
-        const response = await apiClient.post('/prescriptions', payload);
+        let response;
+        if (editingId) {
+          response = await apiClient.put(`/prescriptions/${editingId}`, payload);
+        } else {
+          response = await apiClient.post('/prescriptions', payload);
+        }
+
         if (response.data?.success) {
           setFormData({
             customerId: '',
@@ -233,13 +243,36 @@ export default function PrescriptionsPage() {
             fittingHeight: '',
             segmentHeight: '',
           });
+          setEditingId(null);
           setIsAddingPrescription(false);
           fetchPrescriptions();
         }
       } catch (error) {
-        console.error('Error adding prescription:', error);
+        console.error('Error saving prescription:', error);
       }
     }
+  };
+
+  const handleEditPrescription = (prescription: Prescription) => {
+    setEditingId(prescription.id);
+    setFormData({
+      customerId: prescription.customerId || '',
+      customerName: prescription.customerName,
+      age: prescription.age ? prescription.age.toString() : '',
+      prescriptionDate: prescription.prescriptionDate,
+      prescriptionType: prescription.prescriptionType,
+      od_sph: prescription.od_sph,
+      od_cyl: prescription.od_cyl,
+      od_axis: prescription.od_axis,
+      os_sph: prescription.os_sph,
+      os_cyl: prescription.os_cyl,
+      os_axis: prescription.os_axis,
+      pd: prescription.pd,
+      fittingHeight: prescription.fittingHeight ? prescription.fittingHeight.toString() : '',
+      segmentHeight: prescription.segmentHeight ? prescription.segmentHeight.toString() : '',
+    });
+    setIsAddingPrescription(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeletePrescription = async (id: string) => {
@@ -268,7 +301,7 @@ export default function PrescriptionsPage() {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-blue-600 bg-clip-text text-transparent">Optical Prescriptions</h1>
             <p className="mt-2 text-purple-700">Manage and track all customer prescriptions with ease</p>
           </div>
-          <Button 
+          <Button
             onClick={() => setIsAddingPrescription(!isAddingPrescription)}
             className="gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
           >
@@ -278,10 +311,12 @@ export default function PrescriptionsPage() {
         </div>
       </div>
 
-      {/* Add Prescription Form */}
+      {/* Add/Edit Prescription Form */}
       {isAddingPrescription && (
         <Card className="p-6 bg-gradient-to-br from-pink-50 to-blue-50 border-2 border-purple-200 shadow-lg">
-          <h2 className="mb-6 text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">Create New Prescription</h2>
+          <h2 className="mb-6 text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+            {editingId ? 'Edit Prescription' : 'Create New Prescription'}
+          </h2>
           <div className="space-y-6">
             {/* Customer Selection */}
             <div className="grid gap-4 md:grid-cols-2">
@@ -546,9 +581,23 @@ export default function PrescriptionsPage() {
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button onClick={handleAddPrescription} className="bg-green-600 hover:bg-green-700">
-                Save Prescription
+                {editingId ? 'Update Prescription' : 'Save Prescription'}
               </Button>
-              <Button onClick={() => setIsAddingPrescription(false)} variant="outline">
+              <Button
+                onClick={() => {
+                  setIsAddingPrescription(false);
+                  setEditingId(null);
+                  setFormData({
+                    customerId: '', customerName: '', age: '',
+                    prescriptionDate: new Date().toISOString().split('T')[0],
+                    prescriptionType: 'single',
+                    od_sph: 0, od_cyl: 0, od_axis: 0,
+                    os_sph: 0, os_cyl: 0, os_axis: 0,
+                    pd: 62, fittingHeight: '', segmentHeight: ''
+                  });
+                }}
+                variant="outline"
+              >
                 Cancel
               </Button>
             </div>
@@ -621,11 +670,11 @@ export default function PrescriptionsPage() {
                 <Button onClick={handleCreateCustomer} className="flex-1 bg-blue-600 hover:bg-blue-700">
                   Save & Continue
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     setIsCreatingCustomer(false);
                     setNewCustomerForm({ name: '', email: '', phone: '', birthday: '' });
-                  }} 
+                  }}
                   variant="outline"
                   className="flex-1"
                 >
@@ -666,9 +715,8 @@ export default function PrescriptionsPage() {
                 paginatedPrescriptions.map((prescription, index) => (
                   <tr
                     key={prescription.id}
-                    className={`hover:bg-purple-50 transition-colors ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    }`}
+                    className={`hover:bg-purple-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      }`}
                   >
                     <td className="px-6 py-4">
                       <div>
@@ -704,24 +752,41 @@ export default function PrescriptionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setViewingPrescription(prescription);
+                            setIsViewingPrescription(true);
+                          }}
+                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        >
+                          <Eye size={16} />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleEditPrescription(prescription)}
+                        >
+                          <Edit size={16} />
+                        </Button>
+
+                        <Button
+                          size="sm"
                           className="bg-blue-600 hover:bg-blue-700"
                           onClick={() => generatePrescriptionPDF(prescription)}
                         >
                           <Download size={16} />
                         </Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                          <Edit size={16} />
-                        </Button>
-                        <Button
+                        {/* <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleDeletePrescription(prescription.id)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 size={16} />
-                        </Button>
+                        </Button> */}
                       </div>
                     </td>
                   </tr>
@@ -772,6 +837,93 @@ export default function PrescriptionsPage() {
               Next
             </Button>
           </div>
+        </div>
+      )}
+      {/* View Prescription Modal */}
+      {isViewingPrescription && viewingPrescription && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <Card className="w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Prescription Details</h2>
+              <button
+                onClick={() => {
+                  setIsViewingPrescription(false);
+                  setViewingPrescription(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Customer Name</p>
+                  <p className="font-semibold text-gray-900">{viewingPrescription.customerName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Age</p>
+                  <p className="font-semibold text-gray-900">{viewingPrescription.age ? `${viewingPrescription.age} years` : 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Prescription Date</p>
+                  <p className="font-semibold text-gray-900">{new Date(viewingPrescription.prescriptionDate).toLocaleDateString('en-IN')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Prescription Type</p>
+                  <p className="font-semibold text-gray-900 capitalize">{viewingPrescription.prescriptionType}</p>
+                </div>
+              </div>
+
+              {/* Eye Details Table */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-700">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Eye</th>
+                      <th className="px-4 py-2 text-left">Sphere (SPH)</th>
+                      <th className="px-4 py-2 text-left">Cylinder (CYL)</th>
+                      <th className="px-4 py-2 text-left">Axis</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-blue-900">Right (OD)</td>
+                      <td className="px-4 py-3">{viewingPrescription.od_sph.toFixed(2)}</td>
+                      <td className="px-4 py-3">{viewingPrescription.od_cyl.toFixed(2)}</td>
+                      <td className="px-4 py-3">{viewingPrescription.od_axis}°</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 font-medium text-amber-900">Left (OS)</td>
+                      <td className="px-4 py-3">{viewingPrescription.os_sph.toFixed(2)}</td>
+                      <td className="px-4 py-3">{viewingPrescription.os_cyl.toFixed(2)}</td>
+                      <td className="px-4 py-3">{viewingPrescription.os_axis}°</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase font-semibold">PD</p>
+                  <p className="text-lg font-medium">{viewingPrescription.pd} mm</p>
+                </div>
+                {(viewingPrescription.prescriptionType === 'bifocal' || viewingPrescription.prescriptionType === 'progressive') && (
+                  <>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Fitting Height</p>
+                      <p className="text-lg font-medium">{viewingPrescription.fittingHeight || 'N/A'} {viewingPrescription.fittingHeight ? 'mm' : ''}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-semibold">Segment Height</p>
+                      <p className="text-lg font-medium">{viewingPrescription.segmentHeight || 'N/A'} {viewingPrescription.segmentHeight ? 'mm' : ''}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
       )}
     </div>

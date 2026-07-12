@@ -14,6 +14,8 @@ interface PrescriptionData {
   os_cyl: number;
   os_axis: number;
   pd: number;
+  fittingHeight?: number;
+  segmentHeight?: number;
   prescriptionType: string;
 }
 
@@ -65,7 +67,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
 
   doc.text('Prescription ID:', 20, currentY);
   doc.setFont(undefined, 'normal');
-  doc.text(prescription.id, 55, currentY);
+  doc.text(String(prescription.id), 55, currentY);
 
   doc.setFont(undefined, 'bold');
   doc.text('Issued Date:', 120, currentY);
@@ -119,7 +121,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
     doc.setFont(undefined, 'bold');
     doc.text('Patient ID:', 23, currentY);
     doc.setFont(undefined, 'normal');
-    doc.text(prescription.customerId, 55, currentY);
+    doc.text(String(prescription.customerId), 55, currentY);
   }
 
   // Prescription Table
@@ -175,6 +177,25 @@ export function generatePrescriptionPDF(prescription: PrescriptionData) {
       unit: 'mm',
     },
   ];
+
+  if (prescription.prescriptionType === 'bifocal' || prescription.prescriptionType === 'progressive') {
+    if (prescription.fittingHeight) {
+      rows.push({
+        param: 'Fitting Height',
+        od: `${prescription.fittingHeight}mm`,
+        os: 'Both',
+        unit: 'mm',
+      });
+    }
+    if (prescription.segmentHeight) {
+      rows.push({
+        param: 'Segment Height',
+        od: `${prescription.segmentHeight}mm`,
+        os: 'Both',
+        unit: 'mm',
+      });
+    }
+  }
 
   rows.forEach((row, index) => {
     // Light gray alternate rows
