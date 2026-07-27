@@ -74,6 +74,7 @@ export interface PrescriptionData {
   prescriptionType?: string;
 
   // Order & Customer Metadata
+  prescriptionNumber?: string | number;
   orderNo?: string | number;
   orderDate?: string;
   orderTime?: string;
@@ -165,6 +166,11 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   safeText(`Tel: / ${companyPhone}`, marginX + 16, currentY + 9);
   safeText(`Email: ${companyEmail} | Web: ${companyWeb}`, marginX + 16, currentY + 13.5);
 
+  // Thin separator line
+  doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+  doc.setLineWidth(0.4);
+  doc.line(marginX, currentY + 16, 137, currentY + 16);
+
   // Top Right Order Box
   const orderBoxX = 138;
   const orderBoxY = currentY;
@@ -175,26 +181,15 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setLineWidth(0.4);
   doc.rect(orderBoxX, orderBoxY, orderBoxW, orderBoxH);
 
-  const rawOrderNo = prescription.orderNo !== undefined && prescription.orderNo !== null
-    ? prescription.orderNo
-    : (prescription.id !== undefined && prescription.id !== null ? prescription.id : '0690000565');
+  const rawOrderNo = prescription.prescriptionNumber || prescription.orderNo || prescription.id || '0690000565';
   const orderNo = String(rawOrderNo);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   safeText(orderNo, orderBoxX + orderBoxW / 2, orderBoxY + 6, { align: 'center' });
 
-  // Draw simulated barcode lines
-  const barcodeY = orderBoxY + 8;
-  const barcodeXStart = orderBoxX + 8;
-  const barPattern = [1, 0.5, 1.5, 0.5, 2, 1, 0.5, 1.5, 0.5, 1, 2, 0.5, 1, 1.5, 0.5, 2, 0.5, 1, 1.5, 1];
-  let currBarX = barcodeXStart;
-  doc.setFillColor(0, 0, 0);
-  for (let i = 0; i < barPattern.length; i++) {
-    const w = barPattern[i] * 0.4;
-    doc.rect(currBarX, barcodeY, w, 5, 'F');
-    currBarX += w + 0.5;
-  }
+  // Draw dynamic barcode from prescription number
+  drawBarcode(doc, orderNo, orderBoxX, orderBoxY + 7.5, orderBoxW, 5.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
@@ -206,7 +201,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setFontSize(9);
   safeText(formattedCollDate, orderBoxX + orderBoxW / 2, orderBoxY + 21.5, { align: 'center' });
 
-  currentY += 27;
+  currentY += 20;
 
   // ----------------------------------------------------
   // 2. CUSTOMER & ORDER METADATA
@@ -682,8 +677,60 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setFontSize(8);
   safeText('1', pageWidth - marginX - 2, footerY + 22, { align: 'right' });
 
-  // Save / Download PDF file
-  const sanitizeName = (prescription.customerName || 'Customer').replace(/\s+/g, '_');
-  const fileName = `Prescription_${sanitizeName}_${prescription.prescriptionDate}.pdf`;
-  doc.save(fileName);
+  // Auto-print: open PDF in a new tab and trigger the print dialog
+  doc.autoPrint();
+  const blobUrl = doc.output('bloburl') as unknown as string;
+  const printWindow = window.open(blobUrl, '_blank');
+  if (printWindow) {
+    printWindow.focus();
+  }
+}
+
+function drawBarcode(doc: jsPDF, text: string, startX: number, startY: number, boxWidth: number, barHeight: number) {
+  const charPatterns: Record<string, number[]> = {
+    '0': [1, 1, 2, 2, 1],
+    '1': [2, 1, 1, 1, 2],
+    '2': [1, 2, 1, 1, 2],
+    '3': [2, 2, 1, 1, 1],
+    '4': [1, 1, 2, 1, 2],
+    '5': [2, 1, 2, 1, 1],
+    '6': [1, 2, 2, 1, 1],
+    '7': [1, 1, 1, 2, 2],
+    '8': [2, 1, 1, 2, 1],
+    '9': [1, 2, 1, 2, 1],
+  };
+
+  const str = (text || '00000000').toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const bars: { width: number; isSpace: boolean }[] = [];
+
+  // Start pattern
+  bars.push({ width: 0.6, isSpace: false }, { width: 0.4, isSpace: true }, { width: 0.6, isSpace: false });
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    const pat = charPatterns[ch] || [1, 1, 2, 1, 1];
+    pat.forEach((val, idx) => {
+      const isSpace = idx % 2 === 1;
+      const width = val * 0.35;
+      bars.push({ width, isSpace });
+    });
+    // Inter-character space
+    bars.push({ width: 0.4, isSpace: true });
+  }
+
+  // Stop pattern
+  bars.push({ width: 0.6, isSpace: false }, { width: 0.4, isSpace: true }, { width: 0.6, isSpace: false });
+
+  const totalW = bars.reduce((acc, b) => acc + b.width, 0);
+  const scale = Math.min(1, (boxWidth - 8) / totalW);
+  let currX = startX + Math.max(4, (boxWidth - totalW * scale) / 2);
+
+  doc.setFillColor(0, 0, 0);
+  bars.forEach((b) => {
+    const w = b.width * scale;
+    if (!b.isSpace) {
+      doc.rect(currX, startY, w, barHeight, 'F');
+    }
+    currX += w;
+  });
 }

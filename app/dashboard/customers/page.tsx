@@ -152,200 +152,161 @@ export default function CustomersPage() {
   const paginatedCustomers = customers;
 
   return (
-    <div className="space-y-6">
-      {/* Header with Pastel Gradient */}
-      <div className="rounded-2xl bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 p-8 shadow-md border border-pink-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-blue-600 bg-clip-text text-transparent">
-              Customer Management
-            </h1>
-            <p className="mt-2 text-purple-700">Manage your customer database and relationships</p>
-          </div>
-          <Button
-            onClick={() => setIsAddingCustomer(!isAddingCustomer)}
-            className="gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
-          >
-            <Plus size={20} />
-            Add Customer
-          </Button>
+    <div className="space-y-5">
+      {/* Header Section - Compact Slate Theme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Customer Management</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Manage your customer database and relationships</p>
         </div>
+        <Button
+          onClick={() => setIsAddingCustomer(!isAddingCustomer)}
+          className="gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm text-sm px-4 py-2"
+        >
+          <Plus size={18} />
+          Add Customer
+        </Button>
       </div>
 
       {/* Add/Edit Customer Form */}
       {isAddingCustomer && (
-        <Card className="p-6 bg-gradient-to-br from-pink-50 to-blue-50 border-2 border-purple-200 shadow-lg">
-          <h2 className="mb-6 text-lg font-semibold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            {editingId ? 'Edit Customer' : 'Add New Customer'}
-          </h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            />
-            <Input
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            />
-            <Input
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-            <Input
-              placeholder="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <Input
-              placeholder="City"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-            <Input
-              type="date"
-              placeholder="Date of Birth"
-              value={formData.birthday}
-              onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-            />
+        <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-900"></span>
+              <h2 className="text-sm font-semibold text-slate-900">
+                {editingId ? 'Edit Customer' : 'Add New Customer'}
+              </h2>
+            </div>
+            <button onClick={() => { setIsAddingCustomer(false); setEditingId(null); }} className="text-slate-400 hover:text-slate-600">
+              <X size={18} />
+            </button>
           </div>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={handleAddCustomer} className="bg-green-600 hover:bg-green-700">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">First Name</label>
+              <Input placeholder="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Last Name</label>
+              <Input placeholder="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Phone</label>
+              <Input placeholder="Phone Number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Email</label>
+              <Input placeholder="Email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">City</label>
+              <Input placeholder="City" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="h-9 text-xs" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Date of Birth</label>
+              <Input type="date" value={formData.birthday} onChange={(e) => setFormData({ ...formData, birthday: e.target.value })} className="h-9 text-xs" />
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-slate-100">
+            <Button onClick={() => { setIsAddingCustomer(false); setEditingId(null); setFormData({ firstName: '', lastName: '', phone: '', email: '', city: '', birthday: '' }); }} variant="outline" size="sm" className="h-8 text-xs">Cancel</Button>
+            <Button onClick={handleAddCustomer} size="sm" className="bg-slate-900 hover:bg-slate-800 text-white h-8 text-xs font-medium px-4">
               {editingId ? 'Update Customer' : 'Save Customer'}
-            </Button>
-            <Button 
-              onClick={() => {
-                setIsAddingCustomer(false);
-                setEditingId(null);
-                setFormData({ firstName: '', lastName: '', phone: '', email: '', city: '', birthday: '' });
-              }} 
-              variant="outline"
-            >
-              Cancel
             </Button>
           </div>
         </Card>
       )}
 
-      {/* Search */}
-      <Card className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-          <Input
+      {/* Search Bar */}
+      <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
             type="text"
             placeholder="Search by name, phone, or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="w-full pl-8 pr-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 placeholder-slate-400"
           />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X size={14} />
+            </button>
+          )}
         </div>
-      </Card>
+        <span className="text-xs text-slate-400 whitespace-nowrap">{paginatedCustomers.length} result{paginatedCustomers.length !== 1 ? 's' : ''}</span>
+      </div>
 
       {/* Customers Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border border-slate-200 shadow-sm rounded-xl">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-left text-sm">
             {/* Table Header */}
             <thead>
-              <tr className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Contact</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Location</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Age</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Total Spent</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Last Visit</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold">Actions</th>
+              <tr className="bg-slate-800 text-white">
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Name</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Contact</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Location</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Age</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Total Spent</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Last Visit</th>
+                <th className="px-5 py-3.5 text-center font-semibold text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
 
             {/* Table Body */}
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-200">
               {paginatedCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    No customers found
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                    <p className="text-sm">No customers found</p>
                   </td>
                 </tr>
               ) : (
                 paginatedCustomers.map((customer, index) => (
                   <tr
                     key={customer.id}
-                    className={`hover:bg-purple-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                      }`}
+                    className={`hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <div>
-                        <p className="font-semibold text-gray-900">
-                          {customer.firstName} {customer.lastName}
-                        </p>
-                        <p className="text-xs text-gray-500">ID: {customer.id}</p>
+                        <p className="font-semibold text-slate-900 text-sm">{customer.firstName} {customer.lastName}</p>
+                        <p className="text-xs text-slate-500">ID: {customer.id}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <div>
-                        <a href={`tel:${customer.phone}`} className="text-blue-600 hover:underline font-medium text-sm">
-                          {customer.phone}
-                        </a>
-                        <p className="text-xs text-gray-500">
-                          <a href={`mailto:${customer.email}`} className="text-blue-600 hover:underline">
-                            {customer.email}
-                          </a>
+                        <a href={`tel:${customer.phone}`} className="text-indigo-600 hover:underline font-medium text-sm">{customer.phone}</a>
+                        <p className="text-xs text-slate-500">
+                          <a href={`mailto:${customer.email}`} className="text-indigo-600 hover:underline">{customer.email}</a>
                         </p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{customer.city}</p>
-                        {customer.birthday && (
-                          <p className="text-xs text-gray-500">
-                            {new Date(customer.birthday).toLocaleDateString('en-IN')}
-                          </p>
-                        )}
-                      </div>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-slate-900">{customer.city}</p>
+                      {customer.birthday && (
+                        <p className="text-xs text-slate-500">{new Date(customer.birthday).toLocaleDateString('en-IN')}</p>
+                      )}
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-gray-900">
-                        {customer.birthday ? `${calculateAge(customer.birthday)} years` : '-'}
-                      </p>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-slate-900">{customer.birthday ? `${calculateAge(customer.birthday)} years` : '-'}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-green-600">
-                        LKR.{customer.totalSpent.toLocaleString()}
-                      </p>
+                    <td className="px-5 py-3">
+                      <p className="text-sm font-semibold text-emerald-600">LKR.{customer.totalSpent.toLocaleString()}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">{customer.lastVisit}</p>
+                    <td className="px-5 py-3">
+                      <p className="text-sm text-slate-600">{customer.lastVisit}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setViewingCustomer(customer);
-                            setIsViewingCustomer(true);
-                          }}
-                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                        >
-                          <Eye size={16} />
+                    <td className="px-5 py-3">
+                      <div className="flex justify-center gap-1.5">
+                        <Button size="sm" variant="outline" onClick={() => { setViewingCustomer(customer); setIsViewingCustomer(true); }} className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5">
+                          <Eye size={15} />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() => handleEditCustomer(customer)}
-                        >
-                          <Edit size={16} />
+                        <Button size="sm" variant="outline" onClick={() => handleEditCustomer(customer)} className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5">
+                          <Edit size={15} />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteCustomer(customer.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 size={16} />
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteCustomer(customer.id)} className="text-red-500 hover:text-red-700 border-slate-300 h-8 px-2.5">
+                          <Trash2 size={15} />
                         </Button>
                       </div>
                     </td>
@@ -359,101 +320,45 @@ export default function CustomersPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalItems)} of{' '}
-            {totalItems} customers
-          </p>
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-xs text-slate-500">Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, totalItems)} of {totalItems} customers</p>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>Previous</Button>
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className={
-                    currentPage === page
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : ''
-                  }
-                >
+                <Button key={page} variant={currentPage === page ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(page)}
+                  className={currentPage === page ? 'bg-slate-900 hover:bg-slate-800 text-white' : ''}>
                   {page}
                 </Button>
               ))}
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>Next</Button>
           </div>
         </div>
       )}
 
       {/* View Customer Modal */}
       {isViewingCustomer && viewingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Customer Details</h2>
-              <button
-                onClick={() => {
-                  setIsViewingCustomer(false);
-                  setViewingCustomer(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={24} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">Customer Details</h2>
+              <button onClick={() => { setIsViewingCustomer(false); setViewingCustomer(null); }} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
               </button>
             </div>
-            
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-semibold text-gray-900">{viewingCustomer.firstName} {viewingCustomer.lastName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Customer ID</p>
-                  <p className="font-semibold text-gray-900">{viewingCustomer.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <a href={`tel:${viewingCustomer.phone}`} className="font-semibold text-blue-600 hover:underline">{viewingCustomer.phone}</a>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Email</p>
-                  <a href={`mailto:${viewingCustomer.email}`} className="font-semibold text-blue-600 hover:underline">{viewingCustomer.email || 'N/A'}</a>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">City</p>
-                  <p className="font-semibold text-gray-900">{viewingCustomer.city || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Date of Birth</p>
-                  <p className="font-semibold text-gray-900">{viewingCustomer.birthday ? new Date(viewingCustomer.birthday).toLocaleDateString('en-IN') : 'N/A'} {viewingCustomer.birthday && `(${calculateAge(viewingCustomer.birthday)} yrs)`}</p>
-                </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div><p className="text-xs text-slate-500">Name</p><p className="font-semibold text-slate-900 text-sm">{viewingCustomer.firstName} {viewingCustomer.lastName}</p></div>
+                <div><p className="text-xs text-slate-500">Customer ID</p><p className="font-semibold text-slate-900 text-sm">{viewingCustomer.id}</p></div>
+                <div><p className="text-xs text-slate-500">Phone</p><a href={`tel:${viewingCustomer.phone}`} className="font-semibold text-indigo-600 hover:underline text-sm">{viewingCustomer.phone}</a></div>
+                <div><p className="text-xs text-slate-500">Email</p><a href={`mailto:${viewingCustomer.email}`} className="font-semibold text-indigo-600 hover:underline text-sm">{viewingCustomer.email || 'N/A'}</a></div>
+                <div><p className="text-xs text-slate-500">City</p><p className="font-semibold text-slate-900 text-sm">{viewingCustomer.city || 'N/A'}</p></div>
+                <div><p className="text-xs text-slate-500">Date of Birth</p><p className="font-semibold text-slate-900 text-sm">{viewingCustomer.birthday ? new Date(viewingCustomer.birthday).toLocaleDateString('en-IN') : 'N/A'} {viewingCustomer.birthday && `(${calculateAge(viewingCustomer.birthday)} yrs)`}</p></div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold">Total Spent</p>
-                  <p className="text-lg font-bold text-green-600">LKR.{viewingCustomer.totalSpent.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold">Last Visit</p>
-                  <p className="text-lg font-medium">{viewingCustomer.lastVisit}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <div><p className="text-xs text-slate-500 uppercase font-semibold">Total Spent</p><p className="text-base font-bold text-emerald-600">LKR.{viewingCustomer.totalSpent.toLocaleString()}</p></div>
+                <div><p className="text-xs text-slate-500 uppercase font-semibold">Last Visit</p><p className="text-base font-medium text-slate-900">{viewingCustomer.lastVisit}</p></div>
               </div>
             </div>
           </Card>

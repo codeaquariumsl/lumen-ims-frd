@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, AlertCircle, BarChart3, Eye, X } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertCircle, BarChart3, Eye, X, Search } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 
 interface InventoryItem {
@@ -150,75 +150,86 @@ export default function InventoryPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header Section - Modern Compact Slate Theme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
-          <p className="mt-2 text-gray-600">Track products, stock levels, and warehouse management</p>
+          <h1 className="text-2xl font-bold text-slate-900">Inventory Management</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Track products, stock levels, and warehouse management</p>
         </div>
         <Button
           onClick={() => {
             setIsAddingItem(!isAddingItem);
             if (isAddingItem) setEditingItemId(null);
           }}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className="gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm text-sm px-4 py-2"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Add Item
         </Button>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-xs text-gray-600 mb-2">Total Items</p>
-          <p className="text-2xl font-bold text-gray-900">{inventory.length}</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Items</p>
+          <p className="text-2xl font-bold text-slate-900">{inventory.length}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-gray-600 mb-2">Total Value</p>
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Value</p>
           <p className="text-2xl font-bold text-indigo-600">
             LKR.{(totalInventoryValue / 100000).toFixed(1)}L
           </p>
         </Card>
-        <Card className="p-4 border-l-4 border-red-500">
-          <p className="text-xs text-gray-600 mb-2">Low Stock Items</p>
+        <Card className="p-4 border-l-4 border-l-red-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Low Stock Items</p>
           <p className="text-2xl font-bold text-red-600">{lowStockItems.length}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-orange-500">
-          <p className="text-xs text-gray-600 mb-2">Over Stock Items</p>
-          <p className="text-2xl font-bold text-orange-600">{overStockItems.length}</p>
+        <Card className="p-4 border-l-4 border-l-amber-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Over Stock Items</p>
+          <p className="text-2xl font-bold text-amber-600">{overStockItems.length}</p>
         </Card>
       </div>
 
       {/* Add Item Form */}
       {isAddingItem && (
-        <Card className="p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            {editingItemId ? 'Edit Inventory Item' : 'Add New Inventory Item'}
-          </h2>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Item Code</label>
+        <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-900"></span>
+              <h2 className="text-sm font-semibold text-slate-900">
+                {editingItemId ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+              </h2>
+            </div>
+            <button onClick={() => { setIsAddingItem(false); setEditingItemId(null); }} className="text-slate-400 hover:text-slate-600">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Item Code</label>
               <Input
-                placeholder="Item Code (e.g., FR-001)"
+                placeholder="e.g., FR-001"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Item Name</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Item Name</label>
               <Input
                 placeholder="Item Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1 flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">Category</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Category</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="px-3 py-2 border border-gray-300 rounded-lg flex-1"
+                className="w-full px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -227,85 +238,100 @@ export default function InventoryPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Current Quantity</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Current Quantity</label>
               <Input
                 type="number"
-                placeholder="Current Quantity"
+                placeholder="Quantity"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Min Stock Level</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Min Stock Level</label>
               <Input
                 type="number"
-                placeholder="Min Stock Level"
+                placeholder="Min Stock"
                 value={formData.minStock}
                 onChange={(e) => setFormData({ ...formData, minStock: parseInt(e.target.value) })}
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Max Stock Level</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Max Stock Level</label>
               <Input
                 type="number"
-                placeholder="Max Stock Level"
+                placeholder="Max Stock"
                 value={formData.maxStock}
                 onChange={(e) => setFormData({ ...formData, maxStock: parseInt(e.target.value) })}
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Cost Price</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Cost Price (LKR)</label>
               <Input
                 type="number"
                 placeholder="Cost Price"
                 value={formData.costPrice}
                 onChange={(e) => setFormData({ ...formData, costPrice: parseFloat(e.target.value) })}
                 step="0.01"
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">Selling Price</label>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Selling Price (LKR)</label>
               <Input
                 type="number"
                 placeholder="Selling Price"
                 value={formData.sellingPrice}
                 onChange={(e) => setFormData({ ...formData, sellingPrice: parseFloat(e.target.value) })}
                 step="0.01"
+                className="h-9 text-xs"
               />
             </div>
           </div>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={handleSaveItem} className="bg-green-600 hover:bg-green-700">
-              {editingItemId ? 'Update Item' : 'Save Item'}
-            </Button>
-            <Button onClick={() => { setIsAddingItem(false); setEditingItemId(null); }} variant="outline">
+          <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-slate-100">
+            <Button onClick={() => { setIsAddingItem(false); setEditingItemId(null); }} variant="outline" size="sm" className="h-8 text-xs">
               Cancel
+            </Button>
+            <Button onClick={handleSaveItem} size="sm" className="bg-slate-900 hover:bg-slate-800 text-white h-8 text-xs font-medium px-4">
+              {editingItemId ? 'Update Item' : 'Save Item'}
             </Button>
           </div>
         </Card>
       )}
 
-      {/* Search & Filter */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Input
-          type="text"
-          placeholder="Search by name or code..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-2 items-center bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+        <div className="relative flex-1 w-full">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by name or code..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 placeholder-slate-400"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg"
+          className="px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium text-slate-700"
         >
           <option value="all">All Categories</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
             </option>
           ))}
         </select>
+        <span className="text-xs text-slate-400 whitespace-nowrap">{filteredInventory.length} item{filteredInventory.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Low Stock Alert */}
@@ -324,71 +350,74 @@ export default function InventoryPage() {
       )}
 
       {/* Inventory Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border border-slate-200 shadow-sm rounded-xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left font-medium text-gray-900">Code</th>
-                <th className="px-6 py-3 text-left font-medium text-gray-900">Product Name</th>
-                <th className="px-6 py-3 text-left font-medium text-gray-900">Category</th>
-                <th className="px-6 py-3 text-right font-medium text-gray-900">Quantity</th>
-                <th className="px-6 py-3 text-right font-medium text-gray-900">Min/Max</th>
-                <th className="px-6 py-3 text-right font-medium text-gray-900">Cost/Sell</th>
-                <th className="px-6 py-3 text-center font-medium text-gray-900">Actions</th>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="bg-slate-800 text-white">
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Code</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Product Name</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Category</th>
+                <th className="px-5 py-3.5 text-right font-semibold text-xs uppercase tracking-wider">Quantity</th>
+                <th className="px-5 py-3.5 text-right font-semibold text-xs uppercase tracking-wider">Min/Max</th>
+                <th className="px-5 py-3.5 text-right font-semibold text-xs uppercase tracking-wider">Cost/Sell</th>
+                <th className="px-5 py-3.5 text-center font-semibold text-xs uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-200">
               {filteredInventory.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium text-gray-900">{item.code}</td>
-                  <td className="px-6 py-4 text-gray-900">{item.name}</td>
-                  <td className="px-6 py-4 text-gray-600 capitalize">{item.category}</td>
-                  <td className="px-6 py-4 text-right">
+                <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-5 py-3 font-semibold text-slate-900 text-sm">{item.code}</td>
+                  <td className="px-5 py-3 text-slate-900">{item.name}</td>
+                  <td className="px-5 py-3 text-slate-600 capitalize">{item.category}</td>
+                  <td className="px-5 py-3 text-right">
                     <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${item.quantity <= item.minStock
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold ${item.quantity <= item.minStock
                           ? 'bg-red-100 text-red-700'
                           : item.quantity >= item.maxStock
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-green-100 text-green-700'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700'
                         }`}
                     >
                       {item.quantity}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-gray-600">
+                  <td className="px-5 py-3 text-right text-slate-600">
                     {item.minStock}/{item.maxStock}
                   </td>
-                  <td className="px-6 py-4 text-right text-gray-600">
+                  <td className="px-5 py-3 text-right text-slate-600">
                     LKR.{item.costPrice.toFixed(0)}/LKR.{item.sellingPrice.toFixed(0)}
                   </td>
-                  <td className="px-6 py-4 text-center flex justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setViewingItem(item);
-                        setIsViewingItem(true);
-                      }}
-                      className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                    >
-                      <Eye size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => handleEditItem(item)}
-                    >
-                      <Edit size={16} />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                  <td className="px-5 py-3">
+                    <div className="flex justify-center gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setViewingItem(item);
+                          setIsViewingItem(true);
+                        }}
+                        className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5"
+                      >
+                        <Eye size={15} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditItem(item)}
+                        className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5"
+                      >
+                        <Edit size={15} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="text-red-500 hover:text-red-700 border-slate-300 h-8 px-2.5"
+                      >
+                        <Trash2 size={15} />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -399,73 +428,73 @@ export default function InventoryPage() {
 
       {/* View Item Modal */}
       {isViewingItem && viewingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Inventory Item Details</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg p-6 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">Inventory Item Details</h2>
               <button
                 onClick={() => {
                   setIsViewingItem(false);
                   setViewingItem(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
-            
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-sm text-gray-500">Item Code</p>
-                  <p className="font-semibold text-gray-900">{viewingItem.code}</p>
+                  <p className="text-xs text-slate-500">Item Code</p>
+                  <p className="font-semibold text-slate-900 text-sm">{viewingItem.code}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Item Name</p>
-                  <p className="font-semibold text-gray-900">{viewingItem.name}</p>
+                  <p className="text-xs text-slate-500">Item Name</p>
+                  <p className="font-semibold text-slate-900 text-sm">{viewingItem.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Category</p>
-                  <p className="font-semibold text-gray-900 capitalize">{viewingItem.category}</p>
+                  <p className="text-xs text-slate-500">Category</p>
+                  <p className="font-semibold text-slate-900 text-sm capitalize">{viewingItem.category}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Last Updated</p>
-                  <p className="font-semibold text-gray-900">{viewingItem.lastUpdated || 'N/A'}</p>
+                  <p className="text-xs text-slate-500">Last Updated</p>
+                  <p className="font-semibold text-slate-900 text-sm">{viewingItem.lastUpdated || 'N/A'}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold">Current Qty</p>
-                  <p className={`text-lg font-bold ${
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Current Qty</p>
+                  <p className={`text-base font-bold ${
                     viewingItem.quantity <= viewingItem.minStock ? 'text-red-600' :
-                    viewingItem.quantity >= viewingItem.maxStock ? 'text-orange-600' :
-                    'text-green-600'
+                    viewingItem.quantity >= viewingItem.maxStock ? 'text-amber-600' :
+                    'text-emerald-600'
                   }`}>{viewingItem.quantity}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold">Min Stock</p>
-                  <p className="text-lg font-medium text-gray-900">{viewingItem.minStock}</p>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Min Stock</p>
+                  <p className="text-base font-medium text-slate-900">{viewingItem.minStock}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold">Max Stock</p>
-                  <p className="text-lg font-medium text-gray-900">{viewingItem.maxStock}</p>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Max Stock</p>
+                  <p className="text-base font-medium text-slate-900">{viewingItem.maxStock}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                 <div>
-                  <p className="text-xs text-blue-700 uppercase font-semibold">Cost Price</p>
-                  <p className="text-lg font-bold text-gray-900">LKR.{viewingItem.costPrice.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Cost Price</p>
+                  <p className="text-base font-bold text-slate-900">LKR.{viewingItem.costPrice.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-blue-700 uppercase font-semibold">Selling Price</p>
-                  <p className="text-lg font-bold text-gray-900">LKR.{viewingItem.sellingPrice.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 uppercase font-semibold">Selling Price</p>
+                  <p className="text-base font-bold text-slate-900">LKR.{viewingItem.sellingPrice.toLocaleString()}</p>
                 </div>
               </div>
-              
-              <div className="pt-2 border-t flex justify-end">
-                <p className="text-sm text-gray-600">Total Value in Stock: <span className="font-bold text-indigo-600">LKR.{(viewingItem.quantity * viewingItem.costPrice).toLocaleString()}</span></p>
+
+              <div className="pt-2 border-t border-slate-100 flex justify-end">
+                <p className="text-xs text-slate-500">Total Value in Stock: <span className="font-bold text-indigo-600 text-sm">LKR.{(viewingItem.quantity * viewingItem.costPrice).toLocaleString()}</span></p>
               </div>
             </div>
           </Card>

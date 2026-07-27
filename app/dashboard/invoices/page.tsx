@@ -159,28 +159,28 @@ export default function InvoicesPage() {
   return (
     <>
       {/* 1. Main Page Content (Hidden when printing) */}
-      <div className="space-y-6 print:hidden">
-        {/* Header with Blue-to-Violet Gradient */}
-        <div className="rounded-2xl bg-gradient-to-r from-blue-100 via-indigo-100 to-violet-100 p-8 shadow-md border border-blue-200">
-          <div className="flex items-center gap-4">
-            <div className="rounded-xl bg-indigo-600 p-3 text-white shadow-lg shadow-indigo-200">
-              <Receipt size={32} />
+      <div className="space-y-5 print:hidden">
+        {/* Header Section - Modern Compact Slate Theme */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-slate-900 p-2.5 text-white">
+              <Receipt size={22} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-slate-900">
                 Sales Invoices
               </h1>
-              <p className="mt-1 text-indigo-700 font-medium">Review customer invoices, filter histories, and print receipts</p>
+              <p className="text-sm text-slate-500 mt-0.5">Review customer invoices, filter histories, and print receipts</p>
             </div>
           </div>
         </div>
 
         {/* Filters Panel */}
-        <Card className="p-6 bg-white border border-gray-100 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
               <Input
                 type="text"
                 placeholder="Search Invoice # or Customer..."
@@ -189,13 +189,13 @@ export default function InvoicesPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 h-11 border-gray-200 focus-visible:ring-indigo-500 rounded-lg"
+                className="pl-8 h-9 text-xs border-slate-300 rounded-lg"
               />
             </div>
 
             {/* Start Date */}
             <div className="relative">
-              <Calendar className="absolute left-3 top-3.5 text-gray-400 pointer-events-none" size={18} />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
               <Input
                 type="date"
                 value={startDate}
@@ -203,13 +203,13 @@ export default function InvoicesPage() {
                   setStartDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 h-11 border-gray-200 focus-visible:ring-indigo-500 rounded-lg text-gray-600"
+                className="pl-8 h-9 text-xs border-slate-300 rounded-lg text-slate-600"
               />
             </div>
 
             {/* End Date */}
             <div className="relative">
-              <Calendar className="absolute left-3 top-3.5 text-gray-400 pointer-events-none" size={18} />
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
               <Input
                 type="date"
                 value={endDate}
@@ -217,21 +217,21 @@ export default function InvoicesPage() {
                   setEndDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="pl-10 h-11 border-gray-200 focus-visible:ring-indigo-500 rounded-lg text-gray-600"
+                className="pl-8 h-9 text-xs border-slate-300 rounded-lg text-slate-600"
               />
             </div>
 
             {/* Branch Filter (Admin Only) */}
             {user?.role === 'admin' ? (
               <div className="relative">
-                <Building className="absolute left-3 top-3.5 text-gray-400 pointer-events-none" size={18} />
+                <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
                 <select
                   value={selectedBranch}
                   onChange={(e) => {
                     setSelectedBranch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-10 h-11 border border-gray-200 rounded-lg bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-8 h-9 border border-slate-300 rounded-lg bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 >
                   <option value="">All Branches</option>
                   {branches.map((b) => (
@@ -242,44 +242,44 @@ export default function InvoicesPage() {
                 </select>
               </div>
             ) : (
-              <div className="flex items-center text-sm text-gray-500 px-3 bg-gray-50 border border-gray-200 rounded-lg h-11">
+              <div className="flex items-center text-xs text-slate-500 px-3 bg-slate-50 border border-slate-200 rounded-lg h-9">
                 <span>Branch Filter Restricted</span>
               </div>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Invoices Table Card */}
-        <Card className="overflow-hidden border border-gray-100 shadow-sm rounded-xl">
+        <Card className="overflow-hidden border border-slate-200 shadow-sm rounded-xl">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-semibold uppercase tracking-wider">
-                  <th className="px-6 py-4 text-left">Invoice No</th>
-                  <th className="px-6 py-4 text-left">Date</th>
-                  <th className="px-6 py-4 text-left">Customer</th>
-                  <th className="px-6 py-4 text-left">Staff/Cashier</th>
-                  <th className="px-6 py-4 text-left">Payment</th>
-                  <th className="px-6 py-4 text-right">Net Amount</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
+                <tr className="bg-slate-800 text-white text-xs font-semibold uppercase tracking-wider">
+                  <th className="px-5 py-3.5 text-left">Invoice No</th>
+                  <th className="px-5 py-3.5 text-left">Date</th>
+                  <th className="px-5 py-3.5 text-left">Customer</th>
+                  <th className="px-5 py-3.5 text-left">Staff/Cashier</th>
+                  <th className="px-5 py-3.5 text-left">Payment</th>
+                  <th className="px-5 py-3.5 text-right">Net Amount</th>
+                  <th className="px-5 py-3.5 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
+              <tbody className="divide-y divide-slate-200 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-                        <span>Loading invoices...</span>
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                        <span className="text-xs">Loading invoices...</span>
                       </div>
                     </td>
                   </tr>
                 ) : invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <span className="font-medium">No Invoices Found</span>
-                        <span className="text-xs text-gray-400">Try adjusting your filters or search queries.</span>
+                        <span className="font-semibold text-slate-900 text-sm">No Invoices Found</span>
+                        <span className="text-xs text-slate-400">Try adjusting your filters or search queries.</span>
                       </div>
                     </td>
                   </tr>
@@ -287,10 +287,10 @@ export default function InvoicesPage() {
                   invoices.map((invoice, idx) => (
                     <tr
                       key={invoice.id}
-                      className={`hover:bg-indigo-50/30 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'}`}
+                      className={`hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
                     >
-                      <td className="px-6 py-4 font-semibold text-gray-900">{invoice.invoice_number}</td>
-                      <td className="px-6 py-4 text-gray-600">
+                      <td className="px-5 py-3 font-semibold text-slate-900">{invoice.invoice_number}</td>
+                      <td className="px-5 py-3 text-slate-600 text-xs">
                         {new Date(invoice.sale_date).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
@@ -299,27 +299,25 @@ export default function InvoicesPage() {
                           minute: '2-digit'
                         })}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3">
                         {invoice.first_name ? (
-                          <div>
-                            <p className="font-medium text-gray-800">
-                              {invoice.first_name} {invoice.last_name || ''}
-                            </p>
-                          </div>
+                          <p className="font-medium text-slate-900 text-sm">
+                            {invoice.first_name} {invoice.last_name || ''}
+                          </p>
                         ) : (
-                          <span className="text-gray-400 italic">Walk-in Customer</span>
+                          <span className="text-slate-400 italic text-xs">Walk-in Customer</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{invoice.staff_name}</td>
-                      <td className="px-6 py-4">{getPaymentMethodBadge(invoice.payment_method)}</td>
-                      <td className="px-6 py-4 text-right font-bold text-gray-900">
+                      <td className="px-5 py-3 text-slate-600 text-xs">{invoice.staff_name}</td>
+                      <td className="px-5 py-3">{getPaymentMethodBadge(invoice.payment_method)}</td>
+                      <td className="px-5 py-3 text-right font-bold text-slate-900">
                         LKR.{parseFloat(invoice.net_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center justify-center gap-1.5">
                           <Button
                             size="sm"
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg gap-1.5 shadow-sm"
+                            className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg gap-1.5 h-8 px-2.5 text-xs"
                             onClick={() => handleViewDetails(invoice)}
                           >
                             <Eye size={14} />
@@ -328,7 +326,7 @@ export default function InvoicesPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg gap-1.5"
+                            className="border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg gap-1.5 h-8 px-2.5 text-xs"
                             onClick={() => handleViewDetails(invoice).then(() => setTimeout(() => window.print(), 300))}
                           >
                             <Printer size={14} />
@@ -346,16 +344,17 @@ export default function InvoicesPage() {
 
         {/* Pagination bar */}
         {!isLoading && totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
-            <p className="text-xs text-gray-500 font-medium">
-              Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} invoices
+          <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+            <p className="text-xs text-slate-500 font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1}–{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} invoices
             </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="h-9 rounded-lg"
+                className="h-8 rounded-lg text-xs"
               >
                 Previous
               </Button>
@@ -366,7 +365,7 @@ export default function InvoicesPage() {
                     variant={currentPage === page ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setCurrentPage(page)}
-                    className={`h-9 w-9 rounded-lg ${currentPage === page ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
+                    className={`h-8 w-8 rounded-lg text-xs ${currentPage === page ? 'bg-slate-900 hover:bg-slate-800 text-white' : ''}`}
                   >
                     {page}
                   </Button>
@@ -374,9 +373,10 @@ export default function InvoicesPage() {
               </div>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="h-9 rounded-lg"
+                className="h-8 rounded-lg text-xs"
               >
                 Next
               </Button>
@@ -385,21 +385,21 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      {/* 2. Details Modal Overlay Dialog (Sleek Glassmorphic Backdrop) */}
+      {/* 2. Details Modal Overlay Dialog */}
       {isDetailOpen && selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 print:hidden">
-          <Card className="w-full max-w-2xl bg-white border border-gray-200 shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 print:hidden">
+          <Card className="w-full max-w-2xl bg-white border border-slate-200 shadow-2xl rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-indigo-700 to-violet-700 text-white flex justify-between items-center shadow-md">
+            <div className="px-5 py-3.5 bg-slate-900 text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <Receipt size={20} />
-                <h3 className="font-bold text-lg">Invoice Details</h3>
+                <Receipt size={18} />
+                <h3 className="font-semibold text-sm">Invoice Details</h3>
               </div>
               <button
                 onClick={() => setIsDetailOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                className="text-slate-400 hover:text-white transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
@@ -504,20 +504,22 @@ export default function InvoicesPage() {
             </div>
 
             {/* Modal Actions */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
               <Button
                 variant="outline"
-                className="border-gray-200 text-gray-700 hover:bg-gray-100 rounded-lg h-10"
+                size="sm"
+                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs"
                 onClick={() => setIsDetailOpen(false)}
               >
                 Close
               </Button>
               <Button
+                size="sm"
                 onClick={handlePrint}
                 disabled={isDetailLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg h-10 gap-1.5 shadow-sm"
+                className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg h-8 text-xs gap-1.5 shadow-sm"
               >
-                <Printer size={16} />
+                <Printer size={15} />
                 Print Invoice
               </Button>
             </div>

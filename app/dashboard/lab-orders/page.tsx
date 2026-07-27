@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Glasses, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Glasses, CheckCircle, Clock, AlertCircle, Search, X } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 
 interface LabOrder {
@@ -160,115 +160,154 @@ export default function LabOrdersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header Section - Modern Compact Slate Theme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Lab Orders</h1>
-          <p className="mt-2 text-gray-600">Manage optical lens manufacturing and lab orders</p>
+          <h1 className="text-2xl font-bold text-slate-900">Lab Orders</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Manage optical lens manufacturing and lab orders</p>
         </div>
         <Button
           onClick={() => setIsAddingOrder(!isAddingOrder)}
-          className="bg-indigo-600 hover:bg-indigo-700"
+          className="gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm text-sm px-4 py-2"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           New Order
         </Button>
       </div>
 
       {/* Status Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="p-4 border-l-4 border-yellow-500">
-          <p className="text-xs text-gray-600 mb-2">Pending</p>
-          <p className="text-2xl font-bold text-yellow-600">{statusCounts.pending}</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-4 border-l-4 border-l-amber-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Pending</p>
+          <p className="text-2xl font-bold text-amber-600">{statusCounts.pending}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-blue-500">
-          <p className="text-xs text-gray-600 mb-2">In Process</p>
+        <Card className="p-4 border-l-4 border-l-blue-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">In Process</p>
           <p className="text-2xl font-bold text-blue-600">{statusCounts['in-process']}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-green-500">
-          <p className="text-xs text-gray-600 mb-2">Completed</p>
-          <p className="text-2xl font-bold text-green-600">{statusCounts.completed}</p>
+        <Card className="p-4 border-l-4 border-l-emerald-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Completed</p>
+          <p className="text-2xl font-bold text-emerald-600">{statusCounts.completed}</p>
         </Card>
-        <Card className="p-4 border-l-4 border-purple-500">
-          <p className="text-xs text-gray-600 mb-2">Delivered</p>
-          <p className="text-2xl font-bold text-purple-600">{statusCounts.delivered}</p>
+        <Card className="p-4 border-l-4 border-l-indigo-500 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Delivered</p>
+          <p className="text-2xl font-bold text-indigo-600">{statusCounts.delivered}</p>
         </Card>
       </div>
 
       {/* Add Order Form */}
       {isAddingOrder && (
-        <Card className="p-6">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Create New Lab Order</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input
-              placeholder="Customer Name"
-              value={formData.customerName}
-              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            />
-            <Input
-              placeholder="Frame Code"
-              value={formData.frameCode}
-              onChange={(e) => setFormData({ ...formData, frameCode: e.target.value })}
-            />
-            <select
-              value={formData.lensType}
-              onChange={(e) => setFormData({ ...formData, lensType: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              <option value="standard">Standard Lens</option>
-              <option value="power">Power Lens</option>
-              <option value="bifocal">Bifocal</option>
-              <option value="progressive">Progressive</option>
-              <option value="tinted">Tinted</option>
-            </select>
-            <select
-              value={formData.coating}
-              onChange={(e) => setFormData({ ...formData, coating: e.target.value })}
-              className="px-3 py-2 border border-gray-300 rounded-lg"
-            >
-              <option value="none">No Coating</option>
-              <option value="anti-glare">Anti-Glare</option>
-              <option value="uv">UV Protection</option>
-              <option value="anti-glare-uv">Anti-Glare + UV</option>
-              <option value="blue-light">Blue Light Filter</option>
-            </select>
-            <Input
-              type="number"
-              placeholder="Total Cost"
-              value={formData.totalCost}
-              onChange={(e) => setFormData({ ...formData, totalCost: parseFloat(e.target.value) })}
-              step="100"
-            />
-            <Input
-              type="date"
-              placeholder="Expected Delivery Date"
-              value={formData.deliveryDate}
-              onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-            />
+        <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-slate-900"></span>
+              <h2 className="text-sm font-semibold text-slate-900">Create New Lab Order</h2>
+            </div>
+            <button onClick={() => setIsAddingOrder(false)} className="text-slate-400 hover:text-slate-600">
+              <X size={18} />
+            </button>
           </div>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={handleAddOrder} className="bg-green-600 hover:bg-green-700">
-              Create Order
-            </Button>
-            <Button onClick={() => setIsAddingOrder(false)} variant="outline">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Customer Name</label>
+              <Input
+                placeholder="Customer Name"
+                value={formData.customerName}
+                onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                className="h-9 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Frame Code</label>
+              <Input
+                placeholder="Frame Code"
+                value={formData.frameCode}
+                onChange={(e) => setFormData({ ...formData, frameCode: e.target.value })}
+                className="h-9 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Lens Type</label>
+              <select
+                value={formData.lensType}
+                onChange={(e) => setFormData({ ...formData, lensType: e.target.value })}
+                className="w-full px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+              >
+                <option value="standard">Standard Lens</option>
+                <option value="power">Power Lens</option>
+                <option value="bifocal">Bifocal</option>
+                <option value="progressive">Progressive</option>
+                <option value="tinted">Tinted</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Coating</label>
+              <select
+                value={formData.coating}
+                onChange={(e) => setFormData({ ...formData, coating: e.target.value })}
+                className="w-full px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+              >
+                <option value="none">No Coating</option>
+                <option value="anti-glare">Anti-Glare</option>
+                <option value="uv">UV Protection</option>
+                <option value="anti-glare-uv">Anti-Glare + UV</option>
+                <option value="blue-light">Blue Light Filter</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Total Cost (LKR)</label>
+              <Input
+                type="number"
+                placeholder="Total Cost"
+                value={formData.totalCost}
+                onChange={(e) => setFormData({ ...formData, totalCost: parseFloat(e.target.value) })}
+                step="100"
+                className="h-9 text-xs"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Expected Delivery Date</label>
+              <Input
+                type="date"
+                value={formData.deliveryDate}
+                onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
+                className="h-9 text-xs"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-3 mt-3 border-t border-slate-100">
+            <Button onClick={() => setIsAddingOrder(false)} variant="outline" size="sm" className="h-8 text-xs">
               Cancel
+            </Button>
+            <Button onClick={handleAddOrder} size="sm" className="bg-slate-900 hover:bg-slate-800 text-white h-8 text-xs font-medium px-4">
+              Create Order
             </Button>
           </div>
         </Card>
       )}
 
-      {/* Search & Filter */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Input
-          type="text"
-          placeholder="Search by order number or customer name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-2 items-center bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-sm">
+        <div className="relative flex-1 w-full">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by order number or customer name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 placeholder-slate-400"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+              <X size={14} />
+            </button>
+          )}
+        </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg"
+          className="px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium text-slate-700"
         >
           <option value="all">All Status</option>
           <option value="pending">Pending</option>
@@ -276,64 +315,58 @@ export default function LabOrdersPage() {
           <option value="completed">Completed</option>
           <option value="delivered">Delivered</option>
         </select>
+        <span className="text-xs text-slate-400 whitespace-nowrap">{filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Orders List */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {filteredOrders.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Glasses size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">No lab orders found</p>
+          <Card className="p-8 text-center bg-white border border-slate-200 shadow-sm rounded-xl">
+            <Glasses size={40} className="mx-auto text-slate-400 mb-2" />
+            <p className="text-sm text-slate-500">No lab orders found</p>
           </Card>
         ) : (
           filteredOrders.map((order) => {
-            const statusInfo = statusConfig[order.status];
-            const StatusIcon = statusInfo.icon;
-
             return (
-              <Card key={order.id} className="p-6">
-                <div className="grid gap-6 md:grid-cols-5">
+              <Card key={order.id} className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl hover:border-slate-300 transition-colors">
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5 items-center">
                   {/* Order Info */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Order Number</p>
-                    <p className="font-bold text-gray-900">{order.orderNumber}</p>
-                    <p className="text-xs text-gray-600 mt-2">{order.customerName}</p>
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Order Number</p>
+                    <p className="font-bold text-slate-900 text-sm">{order.orderNumber}</p>
+                    <p className="text-xs text-slate-600 mt-1 font-medium">{order.customerName}</p>
                   </div>
 
                   {/* Frame & Lens Info */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Details</p>
-                    <p className="text-sm font-medium text-gray-900">{order.frameCode}</p>
-                    <p className="text-xs text-gray-600">{order.lensType}</p>
-                    <p className="text-xs text-gray-600">{order.coating}</p>
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Details</p>
+                    <p className="text-xs font-semibold text-slate-900">{order.frameCode}</p>
+                    <p className="text-xs text-slate-500 capitalize">{order.lensType} • {order.coating}</p>
                   </div>
 
                   {/* Dates */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Dates</p>
-                    <p className="text-sm text-gray-900">
-                      <strong>Order:</strong> {order.orderDate}
-                    </p>
-                    <p className="text-sm text-gray-900">
-                      <strong>Delivery:</strong> {order.deliveryDate}
-                    </p>
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Dates</p>
+                    <p className="text-xs text-slate-700">Order: <span className="font-medium text-slate-900">{order.orderDate}</span></p>
+                    <p className="text-xs text-slate-700">Delivery: <span className="font-medium text-slate-900">{order.deliveryDate}</span></p>
                   </div>
 
-                  {/* Status */}
+                  {/* Status Select */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-2">Status</p>
+                    <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Status</p>
                     <select
                       value={order.status}
                       onChange={(e) =>
                         handleStatusChange(order.id, e.target.value as LabOrder['status'])
                       }
-                      className={`w-full px-2 py-1 rounded text-sm font-medium text-white border-0 ${order.status === 'pending'
-                          ? 'bg-yellow-600'
+                      className={`w-full px-2.5 h-8 rounded-lg text-xs font-semibold text-white border-0 focus:ring-2 focus:ring-slate-900 cursor-pointer ${
+                        order.status === 'pending'
+                          ? 'bg-amber-600'
                           : order.status === 'in-process'
                             ? 'bg-blue-600'
                             : order.status === 'completed'
-                              ? 'bg-green-600'
-                              : 'bg-purple-600'
+                              ? 'bg-emerald-600'
+                              : 'bg-indigo-600'
                         }`}
                     >
                       <option value="pending">Pending</option>
@@ -344,25 +377,21 @@ export default function LabOrdersPage() {
                   </div>
 
                   {/* Cost & Actions */}
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-2">Cost</p>
-                    <p className="text-2xl font-bold text-indigo-600">
-                      LKR.{order.totalCost.toLocaleString()}
-                    </p>
-                    <div className="mt-3 flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Edit size={16} />
-                      </Button>
+                  <div className="md:text-right flex sm:flex-col justify-between items-center sm:items-end">
+                    <div>
+                      <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Cost</p>
+                      <p className="text-base font-bold text-slate-900">
+                        LKR.{order.totalCost.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex justify-end gap-1.5 mt-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteOrder(order.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-500 hover:text-red-700 border-slate-300 h-8 px-2.5"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={15} />
                       </Button>
                     </div>
                   </div>
