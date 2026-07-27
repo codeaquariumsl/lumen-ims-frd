@@ -8,7 +8,7 @@ import { ShoppingCart, Users, Package, TrendingUp, Activity, Target, FileText } 
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 
-const COLORS = ['#4f46e5', '#7c3aed', '#06b6d4', '#ec4899', '#f59e0b'];
+const COLORS = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8'];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -85,8 +85,8 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500 font-medium animate-pulse">Loading dashboard command center...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-slate-500 text-sm font-medium animate-pulse">Loading dashboard metrics...</div>
       </div>
     );
   }
@@ -103,106 +103,76 @@ export default function DashboardPage() {
   const profitMargin = monthlyRevenue > 0 ? (monthlyProfit / monthlyRevenue) * 100 : 0;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header Section - Modern Compact Slate Theme */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">Unified command center and business intelligence metrics</p>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Unified command center and business intelligence metrics</p>
         </div>
-        {/* <div className="text-sm text-gray-500 font-medium bg-white px-4 py-2 rounded-lg border shadow-sm">
-          📍 Colombo Branch
-        </div> */}
       </div>
-
-      {/* Quick Actions */}
-      {/* <Card className="p-6">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900 uppercase tracking-wider">Quick Operational Actions</h2>
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => router.push('/dashboard/pos')} className="bg-indigo-600 hover:bg-indigo-700">
-            <ShoppingCart size={18} className="mr-2" />
-            New Sale (POS)
-          </Button>
-          <Button onClick={() => router.push('/dashboard/customers')} className="bg-green-600 hover:bg-green-700">
-            <Users size={18} className="mr-2" />
-            Add Customer
-          </Button>
-          <Button onClick={() => router.push('/dashboard/prescriptions')} className="bg-blue-600 hover:bg-blue-700">
-            <Activity size={18} className="mr-2" />
-            Create Prescription
-          </Button>
-          <Button onClick={() => router.push('/dashboard/lab-orders')} className="bg-purple-600 hover:bg-purple-700">
-            <Package size={18} className="mr-2" />
-            Lab Order
-          </Button>
-          <Button onClick={() => router.push('/dashboard/reports')} variant="outline" className="border-gray-300">
-            <FileText size={18} className="mr-2" />
-            View Reports
-          </Button>
-        </div>
-      </Card> */}
 
       {/* KPI Cards (Advanced Business Intelligence) */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Advanced Performance KPIs</h2>
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-6 border-l-4 border-indigo-500 bg-white shadow-sm">
+        <h2 className="mb-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Advanced Performance KPIs</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="p-4 border-l-4 border-l-indigo-600 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Monthly Revenue</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
                   LKR.{monthlyRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
-                <p className="mt-2 text-xs text-green-600 font-medium">
+                <p className="mt-1 text-xs text-emerald-600 font-medium">
                   {percentageGrowth >= 0 ? '+' : ''}{percentageGrowth.toFixed(1)}% vs last month
                 </p>
               </div>
-              <Activity size={24} className="text-indigo-600" />
+              <Activity size={22} className="text-indigo-600" />
             </div>
           </Card>
 
-          <Card className="p-6 border-l-4 border-green-500 bg-white shadow-sm">
+          <Card className="p-4 border-l-4 border-l-emerald-600 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Gross Profit</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gross Profit</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
                   LKR.{monthlyProfit.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
-                <p className="mt-2 text-xs text-green-600 font-medium">
+                <p className="mt-1 text-xs text-emerald-600 font-medium">
                   {profitMargin.toFixed(0)}% profit margin
                 </p>
               </div>
-              <Target size={24} className="text-green-600" />
+              <Target size={22} className="text-emerald-600" />
             </div>
           </Card>
 
-          <Card className="p-6 border-l-4 border-blue-500 bg-white shadow-sm">
+          <Card className="p-4 border-l-4 border-l-blue-600 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Customers</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Customers</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
                   {summary.totalCustomers.toLocaleString()}
                 </p>
-                <p className="mt-2 text-xs text-green-600 font-medium">
+                <p className="mt-1 text-xs text-emerald-600 font-medium">
                   +{currentMonthData.customers || 0} new this month
                 </p>
               </div>
-              <Users size={24} className="text-blue-600" />
+              <Users size={22} className="text-blue-600" />
             </div>
           </Card>
 
-          <Card className="p-6 border-l-4 border-purple-500 bg-white shadow-sm">
+          <Card className="p-4 border-l-4 border-l-purple-600 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Transaction</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Avg. Transaction</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
                   LKR.{summaryStats.avgBasketSize.toLocaleString()}
                 </p>
-                <p className="mt-2 text-xs text-green-600 font-medium">
+                <p className="mt-1 text-xs text-slate-500 font-medium">
                   based on {summaryStats.totalTransactions} sales
                 </p>
               </div>
-              <TrendingUp size={24} className="text-purple-600" />
+              <TrendingUp size={22} className="text-purple-600" />
             </div>
           </Card>
         </div>
@@ -210,58 +180,58 @@ export default function DashboardPage() {
 
       {/* Operational Highlights (Summary counts) */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Operational Highlights</h2>
-        <div className="grid gap-6 md:grid-cols-4">
-          <Card className="p-6 shadow-sm">
+        <h2 className="mb-3 text-xs font-semibold text-slate-700 uppercase tracking-wider">Operational Highlights</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="p-4 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Revenue</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">
                   LKR.{summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
-                <p className="mt-2 text-xs text-green-600">{summary.totalSalesCount} invoice receipts</p>
+                <p className="mt-1 text-xs text-slate-500">{summary.totalSalesCount} receipts</p>
               </div>
-              <div className="rounded-lg bg-blue-100 p-3">
-                <ShoppingCart size={24} className="text-blue-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{summary.totalCustomers}</p>
-                <p className="mt-2 text-xs text-green-600">Registered patients</p>
-              </div>
-              <div className="rounded-lg bg-green-100 p-3">
-                <Users size={24} className="text-green-600" />
+              <div className="rounded-lg bg-slate-100 p-2.5">
+                <ShoppingCart size={20} className="text-slate-700" />
               </div>
             </div>
           </Card>
 
-          <Card className={`p-6 shadow-sm ${summary.lowStockCount > 0 ? 'border-l-4 border-orange-500' : ''}`}>
+          <Card className="p-4 border border-slate-200 bg-white shadow-sm rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Low Stock Warning</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{summary.lowStockCount}</p>
-                <p className="mt-2 text-xs text-orange-600">Items below minimum stock</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Patients</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">{summary.totalCustomers}</p>
+                <p className="mt-1 text-xs text-slate-500">Registered patients</p>
               </div>
-              <div className="rounded-lg bg-orange-100 p-3">
-                <Package size={24} className="text-orange-600" />
+              <div className="rounded-lg bg-slate-100 p-2.5">
+                <Users size={20} className="text-slate-700" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 shadow-sm">
+          <Card className={`p-4 border border-slate-200 bg-white shadow-sm rounded-xl ${summary.lowStockCount > 0 ? 'border-l-4 border-l-amber-500' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Lab Orders</p>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{summary.activeLabOrders}</p>
-                <p className="mt-2 text-xs text-purple-600">Manufacturing in progress</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Low Stock Warning</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">{summary.lowStockCount}</p>
+                <p className="mt-1 text-xs text-amber-600">Below minimum stock</p>
               </div>
-              <div className="rounded-lg bg-purple-100 p-3">
-                <TrendingUp size={24} className="text-purple-600" />
+              <div className="rounded-lg bg-amber-50 p-2.5">
+                <Package size={20} className="text-amber-600" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 border border-slate-200 bg-white shadow-sm rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Lab Orders</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">{summary.activeLabOrders}</p>
+                <p className="mt-1 text-xs text-indigo-600">In progress</p>
+              </div>
+              <div className="rounded-lg bg-indigo-50 p-2.5">
+                <TrendingUp size={20} className="text-indigo-600" />
               </div>
             </div>
           </Card>
@@ -269,15 +239,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Revenue & Profit Area Chart */}
-        <Card className="p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-gray-900">Revenue & Profit Trend</h2>
-          <ResponsiveContainer width="100%" height={350}>
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Revenue & Profit Trend</h2>
+          <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={monthlyMetrics}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip formatter={(value) => `LKR.${Number(value).toLocaleString()}`} />
               <Legend />
               <Area
@@ -301,14 +271,14 @@ export default function DashboardPage() {
         </Card>
 
         {/* Weekly Activity Bar Chart */}
-        <Card className="p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-gray-900">Weekly Activity (Sales vs Visitors)</h2>
-          <ResponsiveContainer width="100%" height={350}>
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Weekly Activity (Sales vs Visitors)</h2>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={weeklyActivity}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
               <Bar
@@ -328,12 +298,12 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Secondary Charts & Lists Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Secondary Charts Grid */}
+      <div className="grid gap-4 lg:grid-cols-3">
         {/* Category Distribution Pie */}
-        <Card className="p-6 shadow-sm col-span-1">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Sales by Category</h2>
-          <ResponsiveContainer width="100%" height={300}>
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white col-span-1">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Sales by Category</h2>
+          <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
                 data={categoryData}
@@ -341,7 +311,7 @@ export default function DashboardPage() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, value }) => `${name}: ${value}%`}
-                outerRadius={80}
+                outerRadius={75}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -354,56 +324,58 @@ export default function DashboardPage() {
         </Card>
 
         {/* Customer Segmentation Scatter */}
-        <Card className="p-6 shadow-sm col-span-2">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Customer Segmentation</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white col-span-2">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Customer Segmentation</h2>
+          <ResponsiveContainer width="100%" height={260}>
+            <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis
                 type="number"
                 dataKey="x"
                 name="Visit Frequency"
                 unit=" visits"
+                tick={{ fontSize: 12 }}
               />
               <YAxis
                 type="number"
                 dataKey="y"
                 name="Avg. Spend"
                 unit=" LKR."
+                tick={{ fontSize: 12 }}
               />
               <Tooltip cursor={{ strokeDasharray: '3 3' }} />
               <Scatter
                 name="Customers"
                 data={customerSegmentation}
-                fill="#8b5cf6"
+                fill="#334155"
               />
             </ScatterChart>
           </ResponsiveContainer>
         </Card>
       </div>
 
-      {/* Detailed Customer Growth & Product Performance Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Product Performance & Patient Growth Grid */}
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Product Performance Progress Bars */}
-        <Card className="p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-gray-900">Product Performance</h2>
-          <div className="space-y-4">
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Product Performance</h2>
+          <div className="space-y-3">
             {productPerformance.map((product) => (
-              <div key={product.product} className="border-b pb-4 last:border-b-0">
-                <div className="flex items-center justify-between mb-2">
+              <div key={product.product} className="border-b border-slate-100 pb-3 last:border-b-0">
+                <div className="flex items-center justify-between mb-1.5">
                   <div>
-                    <p className="font-medium text-gray-900">{product.product}</p>
-                    <p className="text-xs text-gray-600">LKR.{(product.revenue).toLocaleString()} revenue</p>
+                    <p className="font-semibold text-slate-900 text-xs">{product.product}</p>
+                    <p className="text-[11px] text-slate-500">LKR.{(product.revenue).toLocaleString()} revenue</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-green-600">+{product.growth}%</p>
-                    <p className="text-xs text-gray-600">⭐ {product.satisfaction}/5</p>
+                    <p className="text-xs font-bold text-emerald-600">+{product.growth}%</p>
+                    <p className="text-[11px] text-slate-500">⭐ {product.satisfaction}/5</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                      className="h-full bg-slate-900 rounded-full"
                       style={{
                         width: `${productPerformance.reduce((max, p) => Math.max(max, p.revenue), 0) > 0
                           ? (product.revenue / productPerformance.reduce((max, p) => Math.max(max, p.revenue), 0)) * 100
@@ -419,14 +391,14 @@ export default function DashboardPage() {
         </Card>
 
         {/* Customer Growth Metrics */}
-        <Card className="p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-gray-900">Patient & Prescription Growth</h2>
-          <ResponsiveContainer width="100%" height={300}>
+        <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Patient & Prescription Growth</h2>
+          <ResponsiveContainer width="100%" height={260}>
             <LineChart data={monthlyMetrics}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
               <Tooltip />
               <Legend />
               <Line
@@ -453,36 +425,36 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Statistics */}
-      <Card className="p-6 shadow-sm bg-white">
-        <h2 className="mb-6 text-lg font-semibold text-gray-900">Advanced Business Statistics</h2>
-        <div className="grid gap-4 md:grid-cols-5">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Total Transactions</p>
-            <p className="mt-2 text-2xl font-bold text-gray-900">
+      <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+        <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Advanced Business Statistics</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="text-center p-2">
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Transactions</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">
               {summaryStats.totalTransactions.toLocaleString()}
             </p>
           </div>
-          <div className="text-center border-l">
-            <p className="text-sm text-gray-600">Avg. Basket Size</p>
-            <p className="mt-2 text-2xl font-bold text-indigo-600">
+          <div className="text-center p-2 lg:border-l border-slate-100">
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Avg. Basket Size</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">
               LKR.{summaryStats.avgBasketSize.toLocaleString()}
             </p>
           </div>
-          <div className="text-center border-l">
-            <p className="text-sm text-gray-600">Conversion Rate</p>
-            <p className="mt-2 text-2xl font-bold text-green-600">
+          <div className="text-center p-2 lg:border-l border-slate-100">
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Conversion Rate</p>
+            <p className="mt-1 text-xl font-bold text-emerald-600">
               {summaryStats.conversionRate}%
             </p>
           </div>
-          <div className="text-center border-l">
-            <p className="text-sm text-gray-600">Repeat Patient Rate</p>
-            <p className="mt-2 text-2xl font-bold text-blue-600">
+          <div className="text-center p-2 lg:border-l border-slate-100">
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Repeat Patient Rate</p>
+            <p className="mt-1 text-xl font-bold text-indigo-600">
               {summaryStats.repeatCustomerRate}%
             </p>
           </div>
-          <div className="text-center border-l">
-            <p className="text-sm text-gray-600">Patient Lifetime Value</p>
-            <p className="mt-2 text-2xl font-bold text-purple-600">
+          <div className="text-center p-2 lg:border-l border-slate-100">
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Patient Lifetime Value</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">
               LKR.{summaryStats.customerLifetimeValue.toLocaleString()}
             </p>
           </div>
@@ -490,23 +462,23 @@ export default function DashboardPage() {
       </Card>
 
       {/* Recent Transactions */}
-      <Card className="p-6 shadow-sm bg-white">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Recent Transactions</h2>
-        <div className="space-y-4">
+      <Card className="p-4 border border-slate-200 shadow-sm rounded-xl bg-white">
+        <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">Recent Transactions</h2>
+        <div className="space-y-3">
           {recentSales.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">No recent transactions found.</p>
+            <p className="text-xs text-slate-500 py-4 text-center">No recent transactions found.</p>
           ) : (
             recentSales.map((sale) => (
-              <div key={sale.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+              <div key={sale.id} className="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-b-0">
                 <div>
-                  <p className="font-medium text-gray-900">Invoice #{sale.invoice_number}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-semibold text-slate-900 text-xs">Invoice #{sale.invoice_number}</p>
+                  <p className="text-[11px] text-slate-500">
                     Customer: {sale.first_name ? `${sale.first_name} ${sale.last_name || ''}`.trim() : 'Walk-in'}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">LKR.{parseFloat(sale.net_amount).toLocaleString()}</p>
-                  <p className="text-xs text-green-600 uppercase font-medium">{sale.payment_status}</p>
+                  <p className="font-bold text-slate-900 text-xs">LKR.{parseFloat(sale.net_amount).toLocaleString()}</p>
+                  <p className="text-[11px] text-emerald-600 font-semibold uppercase">{sale.payment_status}</p>
                 </div>
               </div>
             ))
