@@ -671,7 +671,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
 
   fLineY += 4.5;
   doc.setFont('helvetica', 'oblique');
-  safeText('Software by myPOS Software Solutions (Pvt.) Ltd. 0114-500199', marginX, fLineY);
+  safeText('Software by CodeAqua Software Solutions.', marginX, fLineY);
 
   // Right Footer DUPLICATE & Page number
   doc.setFont('helvetica', 'bold');
