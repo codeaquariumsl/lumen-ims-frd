@@ -35,11 +35,11 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { icon: BarChart3, label: 'Dashboard', href: '/dashboard', roles: ['admin', 'manager', 'staff'] },
+    { icon: Eye, label: 'Prescriptions', href: '/dashboard/prescriptions', roles: ['admin', 'manager', 'optometrist', 'staff'] },
     { icon: ShoppingCart, label: 'POS & Billing', href: '/dashboard/pos', roles: ['admin', 'manager', 'sales', 'staff'] },
     { icon: Receipt, label: 'Sales Invoices', href: '/dashboard/invoices', roles: ['admin', 'manager', 'sales', 'staff'] },
-    { icon: Package, label: 'Inventory', href: '/dashboard/inventory', roles: ['admin', 'manager', 'staff'] },
     { icon: Users, label: 'Customers', href: '/dashboard/customers', roles: ['admin', 'manager', 'sales', 'staff'] },
-    { icon: Eye, label: 'Prescriptions', href: '/dashboard/prescriptions', roles: ['admin', 'manager', 'optometrist', 'staff'] },
+    { icon: Package, label: 'Inventory', href: '/dashboard/inventory', roles: ['admin', 'manager', 'staff'] },
     { icon: Boxes, label: 'Lab Orders', href: '/dashboard/lab-orders', roles: ['admin', 'manager', 'staff'] },
     { icon: FileText, label: 'Reports', href: '/dashboard/reports', roles: ['admin', 'manager', 'accountant'] },
     { icon: Shield, label: 'User Management', href: '/dashboard/users', roles: ['admin'] },

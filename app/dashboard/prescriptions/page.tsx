@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer, ShoppingCart } from 'lucide-react';
 import { generatePrescriptionPDF } from '@/lib/pdf/prescription-pdf';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -38,6 +39,7 @@ interface Prescription {
 }
 
 export default function PrescriptionsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [isAddingPrescription, setIsAddingPrescription] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
@@ -208,8 +210,11 @@ export default function PrescriptionsPage() {
   const filteredCustomers = customers;
 
   const handleAddPrescription = async () => {
-    if (formData.customerName && formData.customerId) {
-      try {
+    if (!formData.customerId || !formData.customerName) {
+      alert('Please select a customer before saving the prescription.');
+      return;
+    }
+    try {
         const payload = {
           customerId: formData.customerId,
           prescriptionDate: formData.prescriptionDate,
@@ -256,7 +261,6 @@ export default function PrescriptionsPage() {
       } catch (error) {
         console.error('Error saving prescription:', error);
       }
-    }
   };
 
   const handleEditPrescription = (prescription: Prescription) => {
@@ -351,7 +355,7 @@ export default function PrescriptionsPage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Customer
+                  Customer <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Input
@@ -849,6 +853,16 @@ export default function PrescriptionsPage() {
                       <div className="flex justify-center gap-1.5">
                         <Button
                           size="sm"
+                          onClick={() => router.push(`/dashboard/pos?prescriptionId=${prescription.id}&customerId=${prescription.customerId || ''}`)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5 gap-1.5 font-medium shadow-sm"
+                          title="Create Order for this Prescription"
+                        >
+                          <ShoppingCart size={15} />
+                          <span className="hidden sm:inline text-xs">Create Order</span>
+                        </Button>
+
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setViewingPrescription(prescription);
@@ -1012,6 +1026,20 @@ export default function PrescriptionsPage() {
                     </div>
                   </>
                 )}
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <Button
+                  onClick={() => {
+                    const pxId = viewingPrescription.id;
+                    const cId = viewingPrescription.customerId || '';
+                    setIsViewingPrescription(false);
+                    router.push(`/dashboard/pos?prescriptionId=${pxId}&customerId=${cId}`);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-medium"
+                >
+                  <ShoppingCart size={16} />
+                  Create Order for this Prescription
+                </Button>
               </div>
             </div>
           </Card>

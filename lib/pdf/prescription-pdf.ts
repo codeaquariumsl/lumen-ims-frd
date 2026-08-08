@@ -533,109 +533,99 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   // ----------------------------------------------------
   // 5. PRODUCTS / ITEMS TABLE
   // ----------------------------------------------------
-  const itemTableX = marginX;
-  const itemTableW = contentWidth;
-
-  // Gray Header Fill
-  doc.setFillColor(colors.grayHeader[0], colors.grayHeader[1], colors.grayHeader[2]);
-  doc.rect(itemTableX, currentY, itemTableW, 6, 'F');
-  doc.rect(itemTableX, currentY, itemTableW, 6, 'S');
-
-  // Columns: Code (22mm), Description (84mm), Rate (20mm), Qty (12mm), Dis.% (14mm), Dis.Amt (16mm), Amount (22mm)
-  const itemCols = [
-    itemTableX,
-    itemTableX + 22,
-    itemTableX + 106,
-    itemTableX + 126,
-    itemTableX + 138,
-    itemTableX + 152,
-    itemTableX + 168,
-    itemTableX + itemTableW,
-  ];
-
-  for (let i = 1; i < itemCols.length - 1; i++) {
-    doc.line(itemCols[i], currentY, itemCols[i], currentY + 6);
-  }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(0, 0, 0);
-
-  safeText('Code', itemCols[0] + 3, currentY + 4.2);
-  safeText('Description', itemCols[1] + 3, currentY + 4.2);
-  safeText('Rate', itemCols[3] - 2, currentY + 4.2, { align: 'right' });
-  safeText('Qty', itemCols[4] - 2, currentY + 4.2, { align: 'right' });
-  safeText('Dis. %', itemCols[5] - 2, currentY + 4.2, { align: 'right' });
-  safeText('Dis.Amt', itemCols[6] - 2, currentY + 4.2, { align: 'right' });
-  safeText('Amount', itemCols[7] - 2, currentY + 4.2, { align: 'right' });
-
-  currentY += 6;
-
-  // Render items array or default standard Rx item rows
   let displayItems: PrescriptionItem[] = [];
 
   if (prescription.items && prescription.items.length > 0) {
     displayItems = prescription.items;
-  } else {
-    // Generate default item rows matching prescription
-    const odDesc = `1.50 SINGLE VISION AR PG BLUE CUT ${odDistSph} ${odDistCyl}`;
-    const osDesc = `1.50 SINGLE VISION AR PG BLUE CUT ${osDistSph} ${osDistCyl}`;
 
-    displayItems = [
-      { type: 'R', code: '00107087', description: odDesc, rate: 6250.0, qty: 1, discountPercent: 0, discountAmount: 0, amount: 6250.0 },
-      { type: 'L', code: '00107085', description: osDesc, rate: 6250.0, qty: 1, discountPercent: 0, discountAmount: 0, amount: 6250.0 },
-      { type: 'O', code: '00167459', description: 'INVU MAROON & PINK SQUARE PLASTIC NORM', rate: 4500.0, qty: 1, discountPercent: 20, discountAmount: 0, amount: 3600.0 },
+    // Render items array or default standard Rx item rows
+    const itemTableX = marginX;
+    const itemTableW = contentWidth;
+
+    // Gray Header Fill
+    doc.setFillColor(colors.grayHeader[0], colors.grayHeader[1], colors.grayHeader[2]);
+    doc.rect(itemTableX, currentY, itemTableW, 6, 'F');
+    doc.rect(itemTableX, currentY, itemTableW, 6, 'S');
+
+    // Columns: Code (22mm), Description (84mm), Rate (20mm), Qty (12mm), Dis.% (14mm), Dis.Amt (16mm), Amount (22mm)
+    const itemCols = [
+      itemTableX,
+      itemTableX + 22,
+      itemTableX + 106,
+      itemTableX + 126,
+      itemTableX + 138,
+      itemTableX + 152,
+      itemTableX + 168,
+      itemTableX + itemTableW,
     ];
+
+    for (let i = 1; i < itemCols.length - 1; i++) {
+      doc.line(itemCols[i], currentY, itemCols[i], currentY + 6);
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(0, 0, 0);
+
+    safeText('Code', itemCols[0] + 3, currentY + 4.2);
+    safeText('Description', itemCols[1] + 3, currentY + 4.2);
+    safeText('Rate', itemCols[3] - 2, currentY + 4.2, { align: 'right' });
+    safeText('Qty', itemCols[4] - 2, currentY + 4.2, { align: 'right' });
+    safeText('Dis. %', itemCols[5] - 2, currentY + 4.2, { align: 'right' });
+    safeText('Dis.Amt', itemCols[6] - 2, currentY + 4.2, { align: 'right' });
+    safeText('Amount', itemCols[7] - 2, currentY + 4.2, { align: 'right' });
+
+    currentY += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+
+    let grandTotal = 0;
+
+    displayItems.forEach((item) => {
+      const rowH = 6;
+      const typeLabel = item.type ? `${item.type}   ` : '';
+      const codeStr = `${typeLabel}${item.code || ''}`;
+      const disPctStr = item.discountPercent !== undefined ? item.discountPercent.toFixed(2) : '0.00';
+      const disAmtStr = item.discountAmount !== undefined ? item.discountAmount.toFixed(2) : '0.00';
+      const rateStr = item.rate.toFixed(2);
+      const amtStr = item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      grandTotal += item.amount;
+
+      safeText(codeStr, itemCols[0] + 2, currentY + 4.2);
+      safeText(item.description, itemCols[1] + 2, currentY + 4.2, { maxWidth: 82 });
+      safeText(rateStr, itemCols[3] - 2, currentY + 4.2, { align: 'right' });
+      safeText(item.qty, itemCols[4] - 2, currentY + 4.2, { align: 'right' });
+      safeText(disPctStr, itemCols[5] - 2, currentY + 4.2, { align: 'right' });
+      safeText(disAmtStr, itemCols[6] - 2, currentY + 4.2, { align: 'right' });
+      safeText(amtStr, itemCols[7] - 2, currentY + 4.2, { align: 'right' });
+
+      currentY += rowH;
+    });
+
+    // Calculate final total
+    const finalTotal = prescription.totalAmount !== undefined ? prescription.totalAmount : grandTotal;
+    const formattedTotal = finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Total Line
+    currentY += 2;
+    const totalLineX1 = itemCols[6];
+    const totalLineX2 = itemCols[7];
+
+    doc.setLineWidth(0.4);
+    doc.line(totalLineX1, currentY, totalLineX2, currentY);
+
+    currentY += 4.5;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    safeText(formattedTotal, totalLineX2 - 2, currentY, { align: 'right' });
+
+    // Double underline below total
+    currentY += 1.5;
+    doc.line(totalLineX1, currentY, totalLineX2, currentY);
+    doc.line(totalLineX1, currentY + 0.6, totalLineX2, currentY + 0.6);
   }
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-
-  let grandTotal = 0;
-
-  displayItems.forEach((item) => {
-    const rowH = 6;
-    const typeLabel = item.type ? `${item.type}   ` : '';
-    const codeStr = `${typeLabel}${item.code || ''}`;
-    const disPctStr = item.discountPercent !== undefined ? item.discountPercent.toFixed(2) : '0.00';
-    const disAmtStr = item.discountAmount !== undefined ? item.discountAmount.toFixed(2) : '0.00';
-    const rateStr = item.rate.toFixed(2);
-    const amtStr = item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    grandTotal += item.amount;
-
-    safeText(codeStr, itemCols[0] + 2, currentY + 4.2);
-    safeText(item.description, itemCols[1] + 2, currentY + 4.2, { maxWidth: 82 });
-    safeText(rateStr, itemCols[3] - 2, currentY + 4.2, { align: 'right' });
-    safeText(item.qty, itemCols[4] - 2, currentY + 4.2, { align: 'right' });
-    safeText(disPctStr, itemCols[5] - 2, currentY + 4.2, { align: 'right' });
-    safeText(disAmtStr, itemCols[6] - 2, currentY + 4.2, { align: 'right' });
-    safeText(amtStr, itemCols[7] - 2, currentY + 4.2, { align: 'right' });
-
-    currentY += rowH;
-  });
-
-  // Calculate final total
-  const finalTotal = prescription.totalAmount !== undefined ? prescription.totalAmount : grandTotal;
-  const formattedTotal = finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  // Total Line
-  currentY += 2;
-  const totalLineX1 = itemCols[6];
-  const totalLineX2 = itemCols[7];
-
-  doc.setLineWidth(0.4);
-  doc.line(totalLineX1, currentY, totalLineX2, currentY);
-
-  currentY += 4.5;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  safeText(formattedTotal, totalLineX2 - 2, currentY, { align: 'right' });
-
-  // Double underline below total
-  currentY += 1.5;
-  doc.line(totalLineX1, currentY, totalLineX2, currentY);
-  doc.line(totalLineX1, currentY + 0.6, totalLineX2, currentY + 0.6);
 
   // ----------------------------------------------------
   // 6. FOOTER SECTION
