@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Calendar, Eye, Printer, X, Receipt, Building, CheckCircle2, Clock, AlertCircle, Eye as EyeIcon, DollarSign, FileText } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
+import { printSalePDF } from '@/lib/pdf/sales-pdf';
 
 interface InvoiceItem {
   id: number;
@@ -140,24 +141,29 @@ export default function InvoicesPage() {
   }, [searchTerm, startDate, endDate, selectedBranch, currentPage, user]);
 
   // View invoice details
-  const handleViewDetails = async (invoice: Invoice) => {
+  const handleViewDetails = async (invoice: Invoice): Promise<Invoice> => {
     setIsDetailOpen(true);
     setIsDetailLoading(true);
     setSelectedInvoice(invoice);
     try {
       const response = await apiClient.get(`/sales/${invoice.id}`);
       if (response.data?.success) {
-        setSelectedInvoice(response.data.data);
+        const fullData = response.data.data;
+        setSelectedInvoice(fullData);
+        return fullData;
       }
     } catch (error) {
       console.error('Error fetching invoice details:', error);
     } finally {
       setIsDetailLoading(false);
     }
+    return invoice;
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = (options?: { invoiceOnly?: boolean; receiptOnly?: boolean }) => {
+    if (selectedInvoice) {
+      printSalePDF(selectedInvoice, options, user?.companyDetails);
+    }
   };
 
   // Helper payment method style
@@ -386,7 +392,7 @@ export default function InvoicesPage() {
                             size="sm"
                             variant="outline"
                             className="border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg gap-1.5 h-8 px-2.5 text-xs"
-                            onClick={() => handleViewDetails(invoice).then(() => setTimeout(() => window.print(), 300))}
+                            onClick={() => handleViewDetails(invoice).then((fullInv) => printSalePDF(fullInv || invoice, undefined, user?.companyDetails))}
                           >
                             <Printer size={14} />
                           </Button>
@@ -673,13 +679,33 @@ export default function InvoicesPage() {
                 Close
               </Button>
               <Button
+                variant="outline"
                 size="sm"
-                onClick={handlePrint}
+                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
+                onClick={() => handlePrint({ invoiceOnly: true })}
+                disabled={isDetailLoading}
+              >
+                <FileText size={14} />
+                Print Invoice
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
+                onClick={() => handlePrint({ receiptOnly: true })}
+                disabled={isDetailLoading}
+              >
+                <Receipt size={14} />
+                Print Receipt
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handlePrint()}
                 disabled={isDetailLoading}
                 className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg h-8 text-xs gap-1.5 shadow-sm"
               >
                 <Printer size={15} />
-                Print Complete Invoice
+                Print Both
               </Button>
             </div>
           </Card>

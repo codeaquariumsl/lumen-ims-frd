@@ -207,12 +207,12 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   // 2. CUSTOMER & ORDER METADATA
   // ----------------------------------------------------
   const orderDateStr = new Date(prescription.orderDate || prescription.prescriptionDate).toLocaleDateString('en-GB');
-  const orderTimeStr = prescription.orderTime || '12:06:37';
-  const orderLocStr = prescription.orderLocation || companyDetails?.city || 'AMBALANGODA';
+  const orderTimeStr = prescription.orderTime || '';
+  const orderLocStr = prescription.orderLocation || companyDetails?.city || '';
   const custIdStr = String(prescription.customerId !== undefined ? prescription.customerId : prescription.id);
   const custNameStr = prescription.customerName;
   const deliveryStr = prescription.deliveryMethod || `PICK UP [${orderLocStr}]`;
-  const contactStr = prescription.contactNo || '0779092370';
+  const contactStr = prescription.contactNo || '';
   const addressStr = prescription.address || ',,,';
 
   doc.setFontSize(8.5);

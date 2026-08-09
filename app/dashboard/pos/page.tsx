@@ -28,6 +28,8 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import apiClient from '@/lib/api-client';
+import { useAuth } from '@/lib/auth/auth-context';
+import { printSalePDF } from '@/lib/pdf/sales-pdf';
 
 interface CartItem {
   id: string;
@@ -38,6 +40,7 @@ interface CartItem {
 }
 
 function POSContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -311,15 +314,19 @@ function POSContent() {
       const response = await apiClient.post('/sales/checkout', payload);
       if (response.data?.success) {
         const saleData = response.data.data;
-        setCheckedOutSale({
+        const fullSaleRecord = {
           ...saleData,
           prescription_charges: rxCharges,
           attached_prescription: selectedPrescription,
           advance_paid: advancePaid,
+          advance_amount: advancePaid,
           balance_due: balanceDue,
+          balance_amount: balanceDue,
           payment_type: paymentType,
-          customer_name: customerLabel
-        });
+          customer_name: customerLabel,
+          notes: formattedNotes
+        };
+        setCheckedOutSale(fullSaleRecord);
         setCartItems([]);
         setSelectedCustomerId('');
         setSelectedPrescription(null);
@@ -327,9 +334,7 @@ function POSContent() {
         setIsPaymentDialogOpen(false);
         fetchProducts();
 
-        setTimeout(() => {
-          window.print();
-        }, 300);
+        printSalePDF(fullSaleRecord, undefined, user?.companyDetails);
       }
     } catch (error) {
       console.error('Checkout failed:', error);
