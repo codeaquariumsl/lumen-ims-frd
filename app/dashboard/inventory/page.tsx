@@ -512,7 +512,7 @@ export default function InventoryPage() {
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-none">Total Value</p>
               <p className="text-sm font-bold text-indigo-600 mt-1 leading-none">
-                LKR {(totalInventoryValue / 100000).toFixed(2)}L
+                LKR {Number(totalInventoryValue).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>

@@ -72,6 +72,7 @@ export interface PrescriptionData {
   wrap_angle?: string | number;
   prism?: string;
   prescriptionType?: string;
+  remarks?: string;
 
   // Order & Customer Metadata
   prescriptionNumber?: string | number;
@@ -471,6 +472,27 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   safeText('FH', boxLeftX + 2, frameTopY + 12.5);
   safeText(fhRight, (colX_H[1] + colX_H[2]) / 2, frameTopY + 12.5, { align: 'center' });
   safeText(fhLeft, (colX_H[2] + colX_H[3]) / 2, frameTopY + 12.5, { align: 'center' });
+
+  // Left Remarks / Special Instructions Box (matching the 40mm right frame box)
+  if (prescription.remarks && String(prescription.remarks).trim() !== '') {
+    const remBoxY = frameTopY + 16;
+    const remBoxH = 24;
+    doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+    doc.setLineWidth(0.3);
+    doc.rect(boxLeftX, remBoxY, boxW, remBoxH);
+
+    doc.line(boxLeftX, remBoxY + 5, boxLeftX + boxW, remBoxY + 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    safeText('REMARKS / SPECIAL INSTRUCTIONS', boxLeftX + 3, remBoxY + 3.8);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(50, 50, 50);
+    const remLines = doc.splitTextToSize(String(prescription.remarks), boxW - 6);
+    doc.text(remLines, boxLeftX + 3, remBoxY + 9);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+  }
 
 
   // Right Frame Specs Box (A, B, DBL, DIA, BASE CURVE, etc.)

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer, ShoppingCart } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer, ShoppingCart, FileText } from 'lucide-react';
 import { generatePrescriptionPDF } from '@/lib/pdf/prescription-pdf';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -26,17 +26,101 @@ interface Prescription {
   age?: number;
   prescriptionDate: string;
   expiryDate: string;
+
+  // Refractive OD
   od_sph: number;
   od_cyl: number;
   od_axis: number;
+  od_add?: number;
+  od_va?: string;
+
+  // Refractive OS
   os_sph: number;
   os_cyl: number;
   os_axis: number;
+  os_add?: number;
+  os_va?: string;
+
+  // PD
   pd: number;
+  pd_right?: number;
+  pd_left?: number;
+  pd_near?: number;
+  pd_near_right?: number;
+  pd_near_left?: number;
+
+  // Heights
   fittingHeight?: number;
   segmentHeight?: number;
+  fh_right?: number;
+  fh_left?: number;
+  sh_right?: number;
+  sh_left?: number;
+
+  // Frame Specs
+  a_val?: string;
+  b_val?: string;
+  dbl_val?: string;
+  dia_right?: string;
+  dia_left?: string;
+  base_curve_right?: string;
+  base_curve_left?: string;
+  panto_angle?: string;
+  wrap_angle?: string;
+
   prescriptionType: string;
+  remarks?: string;
 }
+
+const initialFormData = {
+  customerId: '',
+  customerName: '',
+  age: '',
+  prescriptionDate: new Date().toISOString().split('T')[0],
+  prescriptionType: 'single',
+
+  // Right Eye (OD)
+  od_sph: 0,
+  od_cyl: 0,
+  od_axis: 0,
+  od_add: 0,
+  od_va: '6/6',
+
+  // Left Eye (OS)
+  os_sph: 0,
+  os_cyl: 0,
+  os_axis: 0,
+  os_add: 0,
+  os_va: '6/6',
+
+  // PD
+  pd: 62,
+  pd_right: 31,
+  pd_left: 31,
+  pd_near: 0,
+  pd_near_right: 0,
+  pd_near_left: 0,
+
+  // Heights
+  fittingHeight: '',
+  segmentHeight: '',
+  fh_right: '',
+  fh_left: '',
+  sh_right: '',
+  sh_left: '',
+
+  // Frame specs
+  a_val: '',
+  b_val: '',
+  dbl_val: '',
+  dia_right: '',
+  dia_left: '',
+  base_curve_right: '',
+  base_curve_left: '',
+  panto_angle: '',
+  wrap_angle: '',
+  remarks: ''
+};
 
 export default function PrescriptionsPage() {
   const router = useRouter();
@@ -47,6 +131,7 @@ export default function PrescriptionsPage() {
   const [searchCustomer, setSearchCustomer] = useState('');
   const [tableSearch, setTableSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [totalItems, setTotalItems] = useState(0);
@@ -66,24 +151,7 @@ export default function PrescriptionsPage() {
     birthday: '',
   });
 
-  const [formData, setFormData] = useState({
-    customerId: '',
-    customerName: '',
-    age: '',
-    prescriptionDate: new Date().toISOString().split('T')[0],
-    prescriptionType: 'single',
-    // Right Eye (OD)
-    od_sph: 0,
-    od_cyl: 0,
-    od_axis: 0,
-    // Left Eye (OS)
-    os_sph: 0,
-    os_cyl: 0,
-    os_axis: 0,
-    pd: 62,
-    fittingHeight: '',
-    segmentHeight: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const calculateAge = (birthDate: string): number => {
     const today = new Date();
@@ -126,23 +194,57 @@ export default function PrescriptionsPage() {
       });
       if (response.data?.success) {
         const mapped = (response.data.data || []).map((p: any) => ({
-          id: p.id,
-          prescriptionNumber: p.prescription_number || p.prescriptionNumber || p.id,
+          id: String(p.id),
+          prescriptionNumber: p.prescription_number || p.prescriptionNumber || String(p.id),
           customerName: `${p.first_name} ${p.last_name || ''}`.trim(),
-          customerId: p.customer_id,
+          customerId: String(p.customer_id),
           age: p.date_of_birth ? calculateAge(p.date_of_birth) : undefined,
           prescriptionDate: p.prescription_date ? p.prescription_date.split('T')[0] : '',
           expiryDate: p.expiry_date ? p.expiry_date.split('T')[0] : '',
+
+          // Refractive OD
           od_sph: parseFloat(p.od_sph || '0'),
           od_cyl: parseFloat(p.od_cyl || '0'),
           od_axis: p.od_axis || 0,
+          od_add: parseFloat(p.od_add || '0'),
+          od_va: p.od_va || '6/6',
+
+          // Refractive OS
           os_sph: parseFloat(p.os_sph || '0'),
           os_cyl: parseFloat(p.os_cyl || '0'),
           os_axis: p.os_axis || 0,
+          os_add: parseFloat(p.os_add || '0'),
+          os_va: p.os_va || '6/6',
+
+          // PD
           pd: parseFloat(p.pd || '62'),
+          pd_right: p.pd_right ? parseFloat(p.pd_right) : undefined,
+          pd_left: p.pd_left ? parseFloat(p.pd_left) : undefined,
+          pd_near: p.pd_near ? parseFloat(p.pd_near) : undefined,
+          pd_near_right: p.pd_near_right ? parseFloat(p.pd_near_right) : undefined,
+          pd_near_left: p.pd_near_left ? parseFloat(p.pd_near_left) : undefined,
+
+          // Heights
           fittingHeight: p.fitting_height ? parseFloat(p.fitting_height) : undefined,
           segmentHeight: p.segment_height ? parseFloat(p.segment_height) : undefined,
-          prescriptionType: p.prescription_type || 'single'
+          fh_right: p.fh_right ? parseFloat(p.fh_right) : undefined,
+          fh_left: p.fh_left ? parseFloat(p.fh_left) : undefined,
+          sh_right: p.sh_right ? parseFloat(p.sh_right) : undefined,
+          sh_left: p.sh_left ? parseFloat(p.sh_left) : undefined,
+
+          // Frame specs
+          a_val: p.a_val || '',
+          b_val: p.b_val || '',
+          dbl_val: p.dbl_val || '',
+          dia_right: p.dia_right || '',
+          dia_left: p.dia_left || '',
+          base_curve_right: p.base_curve_right || '',
+          base_curve_left: p.base_curve_left || '',
+          panto_angle: p.panto_angle || '',
+          wrap_angle: p.wrap_angle || '',
+
+          prescriptionType: p.prescription_type || 'single',
+          remarks: p.remarks || ''
         }));
         setPrescriptions(mapped);
         setTotalPages(response.data.pagination?.totalPages || 1);
@@ -215,56 +317,70 @@ export default function PrescriptionsPage() {
       return;
     }
     try {
-        const payload = {
-          customerId: formData.customerId,
-          prescriptionDate: formData.prescriptionDate,
-          prescriptionType: formData.prescriptionType,
-          od_sph: formData.od_sph,
-          od_cyl: formData.od_cyl,
-          od_axis: formData.od_axis,
-          os_sph: formData.os_sph,
-          os_cyl: formData.os_cyl,
-          os_axis: formData.os_axis,
-          pd: formData.pd,
-          fittingHeight: formData.fittingHeight ? parseFloat(formData.fittingHeight) : undefined,
-          segmentHeight: formData.segmentHeight ? parseFloat(formData.segmentHeight) : undefined,
-        };
+      const payload = {
+        customerId: formData.customerId,
+        prescriptionDate: formData.prescriptionDate,
+        prescriptionType: formData.prescriptionType,
 
-        let response;
-        if (editingId) {
-          response = await apiClient.put(`/prescriptions/${editingId}`, payload);
-        } else {
-          response = await apiClient.post('/prescriptions', payload);
-        }
+        od_sph: formData.od_sph,
+        od_cyl: formData.od_cyl,
+        od_axis: formData.od_axis,
+        od_add: formData.od_add,
+        od_va: formData.od_va,
 
-        if (response.data?.success) {
-          setFormData({
-            customerId: '',
-            customerName: '',
-            age: '',
-            prescriptionDate: new Date().toISOString().split('T')[0],
-            prescriptionType: 'single',
-            od_sph: 0,
-            od_cyl: 0,
-            od_axis: 0,
-            os_sph: 0,
-            os_cyl: 0,
-            os_axis: 0,
-            pd: 62,
-            fittingHeight: '',
-            segmentHeight: '',
-          });
-          setEditingId(null);
-          setIsAddingPrescription(false);
-          fetchPrescriptions();
-        }
-      } catch (error) {
-        console.error('Error saving prescription:', error);
+        os_sph: formData.os_sph,
+        os_cyl: formData.os_cyl,
+        os_axis: formData.os_axis,
+        os_add: formData.os_add,
+        os_va: formData.os_va,
+
+        pd: formData.pd,
+        pd_right: formData.pd_right,
+        pd_left: formData.pd_left,
+        pd_near: formData.pd_near,
+        pd_near_right: formData.pd_near_right,
+        pd_near_left: formData.pd_near_left,
+
+        fittingHeight: formData.fittingHeight ? parseFloat(String(formData.fittingHeight)) : undefined,
+        segmentHeight: formData.segmentHeight ? parseFloat(String(formData.segmentHeight)) : undefined,
+        fh_right: formData.fh_right ? parseFloat(String(formData.fh_right)) : undefined,
+        fh_left: formData.fh_left ? parseFloat(String(formData.fh_left)) : undefined,
+        sh_right: formData.sh_right ? parseFloat(String(formData.sh_right)) : undefined,
+        sh_left: formData.sh_left ? parseFloat(String(formData.sh_left)) : undefined,
+
+        a_val: formData.a_val,
+        b_val: formData.b_val,
+        dbl_val: formData.dbl_val,
+        dia_right: formData.dia_right,
+        dia_left: formData.dia_left,
+        base_curve_right: formData.base_curve_right,
+        base_curve_left: formData.base_curve_left,
+        panto_angle: formData.panto_angle,
+        wrap_angle: formData.wrap_angle,
+        remarks: formData.remarks
+      };
+
+      let response;
+      if (editingId) {
+        response = await apiClient.put(`/prescriptions/${editingId}`, payload);
+      } else {
+        response = await apiClient.post('/prescriptions', payload);
       }
+
+      if (response.data?.success) {
+        setFormData(initialFormData);
+        setEditingId(null);
+        setIsAddingPrescription(false);
+        fetchPrescriptions();
+      }
+    } catch (error) {
+      console.error('Error saving prescription:', error);
+    }
   };
 
   const handleEditPrescription = (prescription: Prescription) => {
     setEditingId(prescription.id);
+    setShowCustomerDropdown(false);
     setFormData({
       customerId: prescription.customerId || '',
       customerName: prescription.customerName,
@@ -274,15 +390,37 @@ export default function PrescriptionsPage() {
       od_sph: prescription.od_sph,
       od_cyl: prescription.od_cyl,
       od_axis: prescription.od_axis,
+      od_add: prescription.od_add || 0,
+      od_va: prescription.od_va || '6/6',
       os_sph: prescription.os_sph,
       os_cyl: prescription.os_cyl,
       os_axis: prescription.os_axis,
+      os_add: prescription.os_add || 0,
+      os_va: prescription.os_va || '6/6',
       pd: prescription.pd,
+      pd_right: prescription.pd_right || Math.round(prescription.pd / 2),
+      pd_left: prescription.pd_left || Math.round(prescription.pd / 2),
+      pd_near: prescription.pd_near || 0,
+      pd_near_right: prescription.pd_near_right || 0,
+      pd_near_left: prescription.pd_near_left || 0,
       fittingHeight: prescription.fittingHeight ? prescription.fittingHeight.toString() : '',
       segmentHeight: prescription.segmentHeight ? prescription.segmentHeight.toString() : '',
+      fh_right: prescription.fh_right ? prescription.fh_right.toString() : '',
+      fh_left: prescription.fh_left ? prescription.fh_left.toString() : '',
+      sh_right: prescription.sh_right ? prescription.sh_right.toString() : '',
+      sh_left: prescription.sh_left ? prescription.sh_left.toString() : '',
+      a_val: prescription.a_val || '',
+      b_val: prescription.b_val || '',
+      dbl_val: prescription.dbl_val || '',
+      dia_right: prescription.dia_right || '',
+      dia_left: prescription.dia_left || '',
+      base_curve_right: prescription.base_curve_right || '',
+      base_curve_left: prescription.base_curve_left || '',
+      panto_angle: prescription.panto_angle || '',
+      wrap_angle: prescription.wrap_angle || '',
+      remarks: prescription.remarks || ''
     });
     setIsAddingPrescription(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeletePrescription = async (id: string) => {
@@ -321,7 +459,11 @@ export default function PrescriptionsPage() {
           <p className="text-sm text-slate-500 mt-0.5">Manage and track all customer eye prescriptions</p>
         </div>
         <Button
-          onClick={() => setIsAddingPrescription(!isAddingPrescription)}
+          onClick={() => {
+            setEditingId(null);
+            setFormData(initialFormData);
+            setIsAddingPrescription(!isAddingPrescription)
+          }}
           className="gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm text-sm px-4 py-2"
         >
           <Plus size={18} />
@@ -329,56 +471,77 @@ export default function PrescriptionsPage() {
         </Button>
       </div>
 
-      {/* Add/Edit Prescription Form - Modern Compact Panel */}
+      {/* Add/Edit Prescription Modal Dialog */}
       {isAddingPrescription && (
-        <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-slate-900"></span>
-              <h2 className="text-sm font-semibold text-slate-900">
-                {editingId ? 'Edit Prescription' : 'Create New Prescription'}
-              </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto animate-in fade-in">
+          <Card className="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 my-auto p-0 border-0">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white">
+                    {editingId ? 'Edit Prescription' : 'Create New Prescription'}
+                  </h2>
+                  <p className="text-[11px] text-slate-400">Enter customer optical parameters, sphere, cylinder, axis & measurements</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsAddingPrescription(false);
+                  setEditingId(null);
+                }}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+              >
+                <X size={20} />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setIsAddingPrescription(false);
-                setEditingId(null);
-              }}
-              className="text-slate-400 hover:text-slate-600 text-xs"
-            >
-              <X size={18} />
-            </button>
-          </div>
 
-          <div className="space-y-4">
-            {/* Top Control Panel: Customer, Age, Date, Type */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Customer <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Input
-                    placeholder="Search customer..."
-                    value={searchCustomer || formData.customerName}
-                    onChange={(e) => setSearchCustomer(e.target.value)}
-                    onFocus={() => setShowCustomerDropdown(true)}
-                    className="w-full text-xs h-9"
-                  />
-                  {showCustomerDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
-                      {filteredCustomers.length > 0 ? (
-                        <>
-                          {filteredCustomers.map((customer) => (
+            {/* Modal Content */}
+            <div className="px-4 space-y-2 max-h-[80vh] overflow-y-auto">
+              {/* Top Control Panel: Customer, Age, Date, Type */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Customer <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search customer..."
+                      value={searchCustomer || formData.customerName}
+                      onChange={(e) => setSearchCustomer(e.target.value)}
+                      onFocus={() => setShowCustomerDropdown(true)}
+                      className="w-full text-xs h-9"
+                      disabled={!!editingId}
+                    />
+                    {showCustomerDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
+                        {filteredCustomers.length > 0 ? (
+                          <>
+                            {filteredCustomers.map((customer) => (
+                              <button
+                                key={customer.id}
+                                onClick={() => handleSelectCustomer(customer)}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 text-xs"
+                              >
+                                <p className="font-medium text-slate-900">{customer.name}</p>
+                                <p className="text-[11px] text-slate-500">{customer.phone}</p>
+                              </button>
+                            ))}
                             <button
-                              key={customer.id}
-                              onClick={() => handleSelectCustomer(customer)}
-                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 text-xs"
+                              onClick={() => {
+                                setShowCustomerDropdown(false);
+                                setIsCreatingCustomer(true);
+                              }}
+                              className="w-full text-left px-3 py-1.5 bg-slate-50 text-slate-900 font-medium hover:bg-slate-100 flex items-center gap-1.5 text-xs"
                             >
-                              <p className="font-medium text-slate-900">{customer.name}</p>
-                              <p className="text-[11px] text-slate-500">{customer.phone}</p>
+                              <Plus size={14} />
+                              Create New Customer
                             </button>
-                          ))}
+                          </>
+                        ) : (
                           <button
                             onClick={() => {
                               setShowCustomerDropdown(false);
@@ -389,275 +552,490 @@ export default function PrescriptionsPage() {
                             <Plus size={14} />
                             Create New Customer
                           </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setShowCustomerDropdown(false);
-                            setIsCreatingCustomer(true);
-                          }}
-                          className="w-full text-left px-3 py-1.5 bg-slate-50 text-slate-900 font-medium hover:bg-slate-100 flex items-center gap-1.5 text-xs"
-                        >
-                          <Plus size={14} />
-                          Create New Customer
-                        </button>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formData.customerName && (
+                    <p className="text-[11px] text-emerald-600 mt-0.5 font-medium">✓ {formData.customerName}</p>
                   )}
                 </div>
-                {formData.customerName && (
-                  <p className="text-[11px] text-emerald-600 mt-0.5 font-medium">✓ {formData.customerName}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Age (Years)
-                </label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="120"
-                  placeholder="Age"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  disabled={formData.customerId ? true : false}
-                  className="bg-slate-50 text-xs h-9"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Date
-                </label>
-                <Input
-                  type="date"
-                  value={formData.prescriptionDate}
-                  onChange={(e) => setFormData({ ...formData, prescriptionDate: e.target.value })}
-                  className="text-xs h-9"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Type
-                </label>
-                <select
-                  value={formData.prescriptionType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, prescriptionType: e.target.value })
-                  }
-                  className="w-full px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
-                >
-                  <option value="single">Single Vision</option>
-                  <option value="bifocal">Bifocal</option>
-                  <option value="progressive">Progressive</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Side-by-Side Eye Measurement Panels (OD & OS) */}
-            <div className="grid gap-3 md:grid-cols-2">
-              {/* Right Eye (OD) */}
-              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="inline-block w-2 h-2 rounded-full bg-blue-600"></span>
-                    Right Eye (OD)
-                  </h3>
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Oculus Dexter</span>
-                </div>
-                <div className="grid gap-2 grid-cols-3">
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">SPH</label>
-                    <Input
-                      type="number"
-                      step="0.25"
-                      value={formData.od_sph}
-                      onChange={(e) =>
-                        setFormData({ ...formData, od_sph: parseFloat(e.target.value) })
-                      }
-                      placeholder="-1.50"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">CYL</label>
-                    <Input
-                      type="number"
-                      step="0.25"
-                      value={formData.od_cyl}
-                      onChange={(e) =>
-                        setFormData({ ...formData, od_cyl: parseFloat(e.target.value) })
-                      }
-                      placeholder="-0.75"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={formData.od_axis}
-                      onChange={(e) =>
-                        setFormData({ ...formData, od_axis: parseInt(e.target.value) })
-                      }
-                      placeholder="180"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Left Eye (OS) */}
-              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="inline-block w-2 h-2 rounded-full bg-indigo-600"></span>
-                    Left Eye (OS)
-                  </h3>
-                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">Oculus Sinister</span>
-                </div>
-                <div className="grid gap-2 grid-cols-3">
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">SPH</label>
-                    <Input
-                      type="number"
-                      step="0.25"
-                      value={formData.os_sph}
-                      onChange={(e) =>
-                        setFormData({ ...formData, os_sph: parseFloat(e.target.value) })
-                      }
-                      placeholder="-1.25"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">CYL</label>
-                    <Input
-                      type="number"
-                      step="0.25"
-                      value={formData.os_cyl}
-                      onChange={(e) =>
-                        setFormData({ ...formData, os_cyl: parseFloat(e.target.value) })
-                      }
-                      placeholder="-0.50"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="180"
-                      value={formData.os_axis}
-                      onChange={(e) =>
-                        setFormData({ ...formData, os_axis: parseInt(e.target.value) })
-                      }
-                      placeholder="175"
-                      className="text-xs h-8 px-2"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Inline Additional Measurements Row (PD, Fitting Height, Segment Height) */}
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-3 bg-slate-50/50 p-3 rounded-lg border border-slate-200">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Pupillary Distance (PD)
-                </label>
-                <div className="flex items-center gap-1.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Age (Years)
+                  </label>
                   <Input
                     type="number"
-                    step="0.5"
-                    value={formData.pd}
-                    onChange={(e) => setFormData({ ...formData, pd: parseFloat(e.target.value) })}
-                    placeholder="62"
-                    className="text-xs h-8"
+                    min="1"
+                    max="120"
+                    placeholder="Age"
+                    value={formData.age}
+                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                    disabled={formData.customerId ? true : false}
+                    className="bg-slate-50 text-xs h-9"
                   />
-                  <span className="text-xs text-slate-500 font-medium">mm</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.prescriptionDate}
+                    onChange={(e) => setFormData({ ...formData, prescriptionDate: e.target.value })}
+                    className="text-xs h-9"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Type
+                  </label>
+                  <select
+                    value={formData.prescriptionType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, prescriptionType: e.target.value })
+                    }
+                    className="w-full px-3 h-9 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  >
+                    <option value="single">Single Vision</option>
+                    <option value="bifocal">Bifocal</option>
+                    <option value="progressive">Progressive</option>
+                  </select>
                 </div>
               </div>
 
-              {(formData.prescriptionType === 'bifocal' || formData.prescriptionType === 'progressive') && (
-                <>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Fitting Height (FH)
-                    </label>
-                    <div className="flex items-center gap-1.5">
+              {/* Side-by-Side Eye Measurement Panels (OD & OS) */}
+              <div className="grid gap-3 md:grid-cols-2">
+                {/* Right Eye (OD) */}
+                <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-blue-600"></span>
+                      Right Eye (OD)
+                    </h3>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Oculus Dexter</span>
+                  </div>
+                  <div className="grid gap-2 grid-cols-5">
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">SPH</label>
                       <Input
                         type="number"
-                        step="0.1"
-                        value={formData.fittingHeight}
-                        onChange={(e) => setFormData({ ...formData, fittingHeight: e.target.value })}
-                        placeholder="22.5"
-                        className="text-xs h-8"
+                        step="0.25"
+                        value={formData.od_sph}
+                        onChange={(e) =>
+                          setFormData({ ...formData, od_sph: parseFloat(e.target.value) })
+                        }
+                        placeholder="-1.50"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
                       />
-                      <span className="text-xs text-slate-500 font-medium">mm</span>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                      Segment Height (SH)
-                    </label>
-                    <div className="flex items-center gap-1.5">
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">CYL</label>
                       <Input
                         type="number"
-                        step="0.1"
-                        value={formData.segmentHeight}
-                        onChange={(e) => setFormData({ ...formData, segmentHeight: e.target.value })}
-                        placeholder="18.0"
-                        className="text-xs h-8"
+                        step="0.25"
+                        value={formData.od_cyl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, od_cyl: parseFloat(e.target.value) })
+                        }
+                        placeholder="-0.75"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
                       />
-                      <span className="text-xs text-slate-500 font-medium">mm</span>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="180"
+                        value={formData.od_axis}
+                        onChange={(e) =>
+                          setFormData({ ...formData, od_axis: parseInt(e.target.value) })
+                        }
+                        placeholder="180"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">ADD</label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={formData.od_add}
+                        onChange={(e) =>
+                          setFormData({ ...formData, od_add: parseFloat(e.target.value) })
+                        }
+                        placeholder="+2.00"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">V/A</label>
+                      <Input
+                        type="text"
+                        value={formData.od_va}
+                        onChange={(e) =>
+                          setFormData({ ...formData, od_va: e.target.value })
+                        }
+                        placeholder="6/6"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+
+                {/* Left Eye (OS) */}
+                <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-indigo-600"></span>
+                      Left Eye (OS)
+                    </h3>
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">Oculus Sinister</span>
+                  </div>
+                  <div className="grid gap-2 grid-cols-5">
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">SPH</label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={formData.os_sph}
+                        onChange={(e) =>
+                          setFormData({ ...formData, os_sph: parseFloat(e.target.value) })
+                        }
+                        placeholder="-1.25"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">CYL</label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={formData.os_cyl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, os_cyl: parseFloat(e.target.value) })
+                        }
+                        placeholder="-0.50"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="180"
+                        value={formData.os_axis}
+                        onChange={(e) =>
+                          setFormData({ ...formData, os_axis: parseInt(e.target.value) })
+                        }
+                        placeholder="175"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">ADD</label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        value={formData.os_add}
+                        onChange={(e) =>
+                          setFormData({ ...formData, os_add: parseFloat(e.target.value) })
+                        }
+                        placeholder="+2.00"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">V/A</label>
+                      <Input
+                        type="text"
+                        value={formData.os_va}
+                        onChange={(e) =>
+                          setFormData({ ...formData, os_va: e.target.value })
+                        }
+                        placeholder="6/6"
+                        className="text-xs h-8 px-1.5 text-center font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pupillary Distance (PD) & Monocular PDs Row */}
+              <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-200 space-y-2">
+                <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">Pupillary Distance (PD) Parameters</h4>
+                <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Total PD (mm)</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={formData.pd}
+                      onChange={(e) => setFormData({ ...formData, pd: parseFloat(e.target.value) })}
+                      placeholder="62"
+                      className="text-xs h-8 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Right (mm)</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={formData.pd_right}
+                      onChange={(e) => setFormData({ ...formData, pd_right: parseFloat(e.target.value) })}
+                      placeholder="31"
+                      className="text-xs h-8 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Left (mm)</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={formData.pd_left}
+                      onChange={(e) => setFormData({ ...formData, pd_left: parseFloat(e.target.value) })}
+                      placeholder="31"
+                      className="text-xs h-8 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Near (mm)</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={formData.pd_near}
+                      onChange={(e) => setFormData({ ...formData, pd_near: parseFloat(e.target.value) })}
+                      placeholder="58"
+                      className="text-xs h-8 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Fitting Heights, Segment Heights & Technical Frame Specs */}
+              <div className="bg-slate-50/70 p-3.5 rounded-lg border border-slate-200 space-y-3">
+                <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                  Frame Technical Metrics & Lens Heights
+                </h4>
+                
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  {/* Section 1: Lens Heights */}
+                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                      Lens Heights
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">FH R/L (mm)</label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={formData.fh_right}
+                            onChange={(e) => setFormData({ ...formData, fh_right: e.target.value, fittingHeight: e.target.value })}
+                            placeholder="R"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={formData.fh_left}
+                            onChange={(e) => setFormData({ ...formData, fh_left: e.target.value })}
+                            placeholder="L"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">SH R/L (mm)</label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={formData.sh_right}
+                            onChange={(e) => setFormData({ ...formData, sh_right: e.target.value, segmentHeight: e.target.value })}
+                            placeholder="R"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={formData.sh_left}
+                            onChange={(e) => setFormData({ ...formData, sh_left: e.target.value })}
+                            placeholder="L"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Frame Box Dimensions */}
+                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                      Frame Box Dimensions
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">A (mm)</label>
+                        <Input
+                          type="text"
+                          value={formData.a_val}
+                          onChange={(e) => setFormData({ ...formData, a_val: e.target.value })}
+                          placeholder="52"
+                          className="text-xs h-8 font-mono text-center px-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">B (mm)</label>
+                        <Input
+                          type="text"
+                          value={formData.b_val}
+                          onChange={(e) => setFormData({ ...formData, b_val: e.target.value })}
+                          placeholder="38"
+                          className="text-xs h-8 font-mono text-center px-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DBL</label>
+                        <Input
+                          type="text"
+                          value={formData.dbl_val}
+                          onChange={(e) => setFormData({ ...formData, dbl_val: e.target.value })}
+                          placeholder="18"
+                          className="text-xs h-8 font-mono text-center px-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Lens & Base Curve */}
+                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                      Lens & Base Curve
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DIA R/L (mm)</label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="text"
+                            value={formData.dia_right}
+                            onChange={(e) => setFormData({ ...formData, dia_right: e.target.value })}
+                            placeholder="70"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                          <Input
+                            type="text"
+                            value={formData.dia_left}
+                            onChange={(e) => setFormData({ ...formData, dia_left: e.target.value })}
+                            placeholder="70"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Base Curve R/L</label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="text"
+                            value={formData.base_curve_right}
+                            onChange={(e) => setFormData({ ...formData, base_curve_right: e.target.value })}
+                            placeholder="4"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                          <Input
+                            type="text"
+                            value={formData.base_curve_left}
+                            onChange={(e) => setFormData({ ...formData, base_curve_left: e.target.value })}
+                            placeholder="4"
+                            className="text-xs h-8 px-1.5 text-center font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 4: Frame Angles */}
+                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                      Frame Angles
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Panto (°)</label>
+                        <Input
+                          type="text"
+                          value={formData.panto_angle}
+                          onChange={(e) => setFormData({ ...formData, panto_angle: e.target.value })}
+                          placeholder="8"
+                          className="text-xs h-8 font-mono text-center px-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Wrap (°)</label>
+                        <Input
+                          type="text"
+                          value={formData.wrap_angle}
+                          onChange={(e) => setFormData({ ...formData, wrap_angle: e.target.value })}
+                          placeholder="5"
+                          className="text-xs h-8 font-mono text-center px-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full-Width Remarks & Instructions Field */}
+                <div className="pt-1.5 border-t border-slate-200/60">
+                  <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Prescription Remarks & Clinical Instructions
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.remarks}
+                    onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                    placeholder="Enter special instructions (e.g., Anti-Reflective coating, Blue Light filter, Hydrophobic, Prism notes, specific tint)..."
+                    className="w-full text-xs h-9 bg-white border-slate-300 focus:ring-slate-900 font-medium text-slate-900 placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Action Buttons Toolbar */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            {/* Modal Footer Toolbar */}
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
               <Button
                 onClick={() => {
                   setIsAddingPrescription(false);
                   setEditingId(null);
-                  setFormData({
-                    customerId: '', customerName: '', age: '',
-                    prescriptionDate: new Date().toISOString().split('T')[0],
-                    prescriptionType: 'single',
-                    od_sph: 0, od_cyl: 0, od_axis: 0,
-                    os_sph: 0, os_cyl: 0, os_axis: 0,
-                    pd: 62, fittingHeight: '', segmentHeight: ''
-                  });
+                  setFormData(initialFormData);
                 }}
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-9 text-xs px-4"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddPrescription}
                 size="sm"
-                className="bg-slate-900 hover:bg-slate-800 text-white h-8 text-xs font-medium px-4"
+                className="bg-slate-900 hover:bg-slate-800 text-white h-9 text-xs font-semibold px-5 shadow-sm"
               >
                 {editingId ? 'Update Prescription' : 'Save Prescription'}
               </Button>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       {/* Create Customer Modal */}
       {isCreatingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
           <Card className="w-full max-w-md p-6 shadow-2xl bg-white rounded-xl">
             <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
               <h2 className="text-base font-semibold text-slate-900">Quick Customer Registration</h2>
@@ -762,11 +1140,10 @@ export default function PrescriptionsPage() {
             <button
               key={type}
               onClick={() => { setFilterType(type); setCurrentPage(1); }}
-              className={`px-3 h-8 text-xs rounded-lg font-medium border transition-colors ${
-                filterType === type
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
-              }`}
+              className={`px-3 h-8 text-xs rounded-lg font-medium border transition-colors ${filterType === type
+                ? 'bg-slate-900 text-white border-slate-900'
+                : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500'
+                }`}
             >
               {type === 'all' ? 'All' : type === 'single' ? 'Single' : type === 'bifocal' ? 'Bifocal' : 'Progressive'}
             </button>
@@ -946,88 +1323,143 @@ export default function PrescriptionsPage() {
 
       {/* View Prescription Modal */}
       {isViewingPrescription && viewingPrescription && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <Card className="w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-900">Prescription Details</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <Card className="w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-slate-200 space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-slate-900 text-white">
+                  <Eye size={18} />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Prescription Details - Rx #{viewingPrescription.prescriptionNumber || viewingPrescription.id}
+                  </h2>
+                  <p className="text-xs text-slate-500">Customer refractive measurements & technical specs</p>
+                </div>
+              </div>
               <button
                 onClick={() => {
                   setIsViewingPrescription(false);
                   setViewingPrescription(null);
                 }}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
                 <div>
-                  <p className="text-xs text-slate-500">Customer Name</p>
-                  <p className="font-semibold text-slate-900 text-sm">{viewingPrescription.customerName}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Customer Name</p>
+                  <p className="font-semibold text-slate-900 text-xs mt-0.5">{viewingPrescription.customerName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Age</p>
-                  <p className="font-semibold text-slate-900 text-sm">{viewingPrescription.age ? `${viewingPrescription.age} years` : 'N/A'}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Age</p>
+                  <p className="font-semibold text-slate-900 text-xs mt-0.5">{viewingPrescription.age ? `${viewingPrescription.age} years` : 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Prescription Date</p>
-                  <p className="font-semibold text-slate-900 text-sm">{new Date(viewingPrescription.prescriptionDate).toLocaleDateString('en-IN')}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Rx Date</p>
+                  <p className="font-semibold text-slate-900 text-xs mt-0.5">{new Date(viewingPrescription.prescriptionDate).toLocaleDateString('en-GB')}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Prescription Type</p>
-                  <p className="font-semibold text-slate-900 text-sm capitalize">{viewingPrescription.prescriptionType}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Rx Type</p>
+                  <p className="font-semibold text-slate-900 text-xs capitalize mt-0.5">{viewingPrescription.prescriptionType}</p>
                 </div>
               </div>
 
-              {/* Eye Details Table */}
-              <div className="border border-slate-200 rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-slate-700">
+              {/* Eye Refraction Table */}
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-900 text-white">
                     <tr>
-                      <th className="px-4 py-2.5 text-left text-xs uppercase font-semibold">Eye</th>
-                      <th className="px-4 py-2.5 text-left text-xs uppercase font-semibold">Sphere (SPH)</th>
-                      <th className="px-4 py-2.5 text-left text-xs uppercase font-semibold">Cylinder (CYL)</th>
-                      <th className="px-4 py-2.5 text-left text-xs uppercase font-semibold">Axis</th>
+                      <th className="px-3.5 py-2 text-left text-[11px] uppercase font-bold">Eye</th>
+                      <th className="px-3.5 py-2 text-center text-[11px] uppercase font-bold">SPH</th>
+                      <th className="px-3.5 py-2 text-center text-[11px] uppercase font-bold">CYL</th>
+                      <th className="px-3.5 py-2 text-center text-[11px] uppercase font-bold">AXIS</th>
+                      <th className="px-3.5 py-2 text-center text-[11px] uppercase font-bold">ADD</th>
+                      <th className="px-3.5 py-2 text-center text-[11px] uppercase font-bold">V/A</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-200 font-mono">
                     <tr>
-                      <td className="px-4 py-3 font-semibold text-slate-900">Right (OD)</td>
-                      <td className="px-4 py-3">{viewingPrescription.od_sph.toFixed(2)}</td>
-                      <td className="px-4 py-3">{viewingPrescription.od_cyl.toFixed(2)}</td>
-                      <td className="px-4 py-3">{viewingPrescription.od_axis}°</td>
+                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900">Right (OD)</td>
+                      <td className="px-3.5 py-2.5 text-center font-bold">{viewingPrescription.od_sph > 0 ? `+${viewingPrescription.od_sph.toFixed(2)}` : viewingPrescription.od_sph.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.od_cyl > 0 ? `+${viewingPrescription.od_cyl.toFixed(2)}` : viewingPrescription.od_cyl.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.od_axis}°</td>
+                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">{viewingPrescription.od_add ? `+${viewingPrescription.od_add.toFixed(2)}` : '0.00'}</td>
+                      <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.od_va || '6/6'}</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3 font-semibold text-slate-900">Left (OS)</td>
-                      <td className="px-4 py-3">{viewingPrescription.os_sph.toFixed(2)}</td>
-                      <td className="px-4 py-3">{viewingPrescription.os_cyl.toFixed(2)}</td>
-                      <td className="px-4 py-3">{viewingPrescription.os_axis}°</td>
+                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900">Left (OS)</td>
+                      <td className="px-3.5 py-2.5 text-center font-bold">{viewingPrescription.os_sph > 0 ? `+${viewingPrescription.os_sph.toFixed(2)}` : viewingPrescription.os_sph.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.os_cyl > 0 ? `+${viewingPrescription.os_cyl.toFixed(2)}` : viewingPrescription.os_cyl.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.os_axis}°</td>
+                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">{viewingPrescription.os_add ? `+${viewingPrescription.os_add.toFixed(2)}` : '0.00'}</td>
+                      <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.os_va || '6/6'}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+              {/* PD & Heights Breakdown */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
                 <div>
-                  <p className="text-xs text-slate-500 uppercase font-semibold">PD</p>
-                  <p className="text-base font-medium text-slate-900">{viewingPrescription.pd} mm</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Total PD</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">{viewingPrescription.pd} mm</p>
                 </div>
-                {(viewingPrescription.prescriptionType === 'bifocal' || viewingPrescription.prescriptionType === 'progressive') && (
-                  <>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase font-semibold">Fitting Height</p>
-                      <p className="text-base font-medium text-slate-900">{viewingPrescription.fittingHeight || 'N/A'} {viewingPrescription.fittingHeight ? 'mm' : ''}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase font-semibold">Segment Height</p>
-                      <p className="text-base font-medium text-slate-900">{viewingPrescription.segmentHeight || 'N/A'} {viewingPrescription.segmentHeight ? 'mm' : ''}</p>
-                    </div>
-                  </>
-                )}
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">PD (Right / Left)</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
+                    {viewingPrescription.pd_right || Math.round(viewingPrescription.pd / 2)} / {viewingPrescription.pd_left || Math.round(viewingPrescription.pd / 2)} mm
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Fitting Height (FH R / L)</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
+                    {viewingPrescription.fh_right || viewingPrescription.fittingHeight || 'N/A'} / {viewingPrescription.fh_left || viewingPrescription.fittingHeight || 'N/A'} mm
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Segment Height (SH R / L)</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
+                    {viewingPrescription.sh_right || viewingPrescription.segmentHeight || 'N/A'} / {viewingPrescription.sh_left || viewingPrescription.segmentHeight || 'N/A'} mm
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+
+              {/* Technical Frame Specs Grid */}
+              {(viewingPrescription.a_val || viewingPrescription.b_val || viewingPrescription.dbl_val || viewingPrescription.dia_right || viewingPrescription.base_curve_right) && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Technical Frame & Lens Metrics</p>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center font-mono">
+                    {viewingPrescription.a_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">A</span><span className="font-bold">{viewingPrescription.a_val}</span></div>}
+                    {viewingPrescription.b_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">B</span><span className="font-bold">{viewingPrescription.b_val}</span></div>}
+                    {viewingPrescription.dbl_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">DBL</span><span className="font-bold">{viewingPrescription.dbl_val}</span></div>}
+                    {viewingPrescription.dia_right && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">DIA (R/L)</span><span className="font-bold">{viewingPrescription.dia_right}/{viewingPrescription.dia_left || viewingPrescription.dia_right}</span></div>}
+                    {viewingPrescription.base_curve_right && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">BASE CURVE</span><span className="font-bold">{viewingPrescription.base_curve_right}</span></div>}
+                    {viewingPrescription.panto_angle && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">PANTO</span><span className="font-bold">{viewingPrescription.panto_angle}°</span></div>}
+                  </div>
+                </div>
+              )}
+
+              {/* Remarks & Special Instructions */}
+              {viewingPrescription.remarks && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remarks / Special Instructions</p>
+                  <p className="text-slate-800 font-medium">{viewingPrescription.remarks}</p>
+                </div>
+              )}
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <Button
+                  onClick={() => generatePrescriptionPDF(viewingPrescription, user?.companyDetails)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white gap-2 font-medium text-xs h-9 px-4"
+                >
+                  <Printer size={15} />
+                  Print Prescription PDF
+                </Button>
                 <Button
                   onClick={() => {
                     const pxId = viewingPrescription.id;
@@ -1035,9 +1467,9 @@ export default function PrescriptionsPage() {
                     setIsViewingPrescription(false);
                     router.push(`/dashboard/pos?prescriptionId=${pxId}&customerId=${cId}`);
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-medium"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-medium text-xs h-9 px-4"
                 >
-                  <ShoppingCart size={16} />
+                  <ShoppingCart size={15} />
                   Create Order for this Prescription
                 </Button>
               </div>
