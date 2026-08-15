@@ -451,9 +451,9 @@ export default function PrescriptionsPage() {
   const paginatedPrescriptions = filteredPrescriptions;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Header Section - Modern Compact Slate Theme */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Optical Prescriptions</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage and track all customer eye prescriptions</p>
@@ -1173,6 +1173,7 @@ export default function PrescriptionsPage() {
               <tr className="bg-slate-800 text-white">
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Customer</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Dates</th>
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Type</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Right Eye (OD)</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Left Eye (OS)</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">PD</th>
@@ -1214,6 +1215,11 @@ export default function PrescriptionsPage() {
                           Exp: {new Date(prescription.expiryDate).toLocaleDateString('en-IN')}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-5 py-3 text-slate-700">
+                      <p className="text-sm text-slate-900 font-bold text-emerald-600">
+                        {prescription.prescriptionType === "single" ? "Single Vision" : prescription.prescriptionType === "bifocal" ? "Bifocal" : "Progressive"}
+                      </p>
                     </td>
                     <td className="px-5 py-3 text-slate-700">
                       <p className="text-sm text-slate-900">
@@ -1326,8 +1332,8 @@ export default function PrescriptionsPage() {
       {/* View Prescription Modal */}
       {isViewingPrescription && viewingPrescription && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <Card className="w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-slate-200 space-y-5">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          <Card className="w-full max-w-3xl px-4 shadow-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl border border-slate-200 space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-slate-900 text-white">
                   <Eye size={18} />
@@ -1350,7 +1356,7 @@ export default function PrescriptionsPage() {
               </button>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
                 <div>
                   <p className="text-[10px] uppercase font-bold text-slate-400">Customer Name</p>
@@ -1385,62 +1391,151 @@ export default function PrescriptionsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-200 font-mono">
                     <tr>
-                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900">Right (OD)</td>
-                      <td className="px-3.5 py-2.5 text-center font-bold">{viewingPrescription.od_sph > 0 ? `+${viewingPrescription.od_sph.toFixed(2)}` : viewingPrescription.od_sph.toFixed(2)}</td>
-                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.od_cyl > 0 ? `+${viewingPrescription.od_cyl.toFixed(2)}` : viewingPrescription.od_cyl.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        Right (OD)
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center font-bold">
+                        {viewingPrescription.od_sph > 0 ? `+${viewingPrescription.od_sph.toFixed(2)}` : viewingPrescription.od_sph.toFixed(2)}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        {viewingPrescription.od_cyl > 0 ? `+${viewingPrescription.od_cyl.toFixed(2)}` : viewingPrescription.od_cyl.toFixed(2)}
+                      </td>
                       <td className="px-3.5 py-2.5 text-center">{viewingPrescription.od_axis}°</td>
-                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">{viewingPrescription.od_add ? `+${viewingPrescription.od_add.toFixed(2)}` : '0.00'}</td>
+                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">
+                        {viewingPrescription.od_add ? `+${viewingPrescription.od_add.toFixed(2)}` : '0.00'}
+                      </td>
                       <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.od_va || '6/6'}</td>
                     </tr>
                     <tr>
-                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900">Left (OS)</td>
-                      <td className="px-3.5 py-2.5 text-center font-bold">{viewingPrescription.os_sph > 0 ? `+${viewingPrescription.os_sph.toFixed(2)}` : viewingPrescription.os_sph.toFixed(2)}</td>
-                      <td className="px-3.5 py-2.5 text-center">{viewingPrescription.os_cyl > 0 ? `+${viewingPrescription.os_cyl.toFixed(2)}` : viewingPrescription.os_cyl.toFixed(2)}</td>
+                      <td className="px-3.5 py-2.5 font-bold font-sans text-slate-900 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                        Left (OS)
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center font-bold">
+                        {viewingPrescription.os_sph > 0 ? `+${viewingPrescription.os_sph.toFixed(2)}` : viewingPrescription.os_sph.toFixed(2)}
+                      </td>
+                      <td className="px-3.5 py-2.5 text-center">
+                        {viewingPrescription.os_cyl > 0 ? `+${viewingPrescription.os_cyl.toFixed(2)}` : viewingPrescription.os_cyl.toFixed(2)}
+                      </td>
                       <td className="px-3.5 py-2.5 text-center">{viewingPrescription.os_axis}°</td>
-                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">{viewingPrescription.os_add ? `+${viewingPrescription.os_add.toFixed(2)}` : '0.00'}</td>
+                      <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">
+                        {viewingPrescription.os_add ? `+${viewingPrescription.os_add.toFixed(2)}` : '0.00'}
+                      </td>
                       <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.os_va || '6/6'}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              {/* PD & Heights Breakdown */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">Total PD</p>
-                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">{viewingPrescription.pd} mm</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">PD (Right / Left)</p>
-                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
-                    {viewingPrescription.pd_right || Math.round(viewingPrescription.pd / 2)} / {viewingPrescription.pd_left || Math.round(viewingPrescription.pd / 2)} mm
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">Fitting Height (FH R / L)</p>
-                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
-                    {viewingPrescription.fh_right || viewingPrescription.fittingHeight || 'N/A'} / {viewingPrescription.fh_left || viewingPrescription.fittingHeight || 'N/A'} mm
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">Segment Height (SH R / L)</p>
-                  <p className="text-sm font-bold text-slate-900 font-mono mt-0.5">
-                    {viewingPrescription.sh_right || viewingPrescription.segmentHeight || 'N/A'} / {viewingPrescription.sh_left || viewingPrescription.segmentHeight || 'N/A'} mm
-                  </p>
+              {/* PD Summary */}
+              <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pupillary Distance (PD) Summary</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono">
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/80">
+                    <span className="text-[10px] text-slate-400 font-sans uppercase block font-bold">Total PD</span>
+                    <span className="text-sm font-bold text-slate-900">{viewingPrescription.pd} mm</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/80">
+                    <span className="text-[10px] text-slate-400 font-sans uppercase block font-bold">Mono PD (R / L)</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {viewingPrescription.pd_right || Math.round(viewingPrescription.pd / 2)} / {viewingPrescription.pd_left || Math.round(viewingPrescription.pd / 2)} mm
+                    </span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/80">
+                    <span className="text-[10px] text-slate-400 font-sans uppercase block font-bold">Near PD Total</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {viewingPrescription.pd_near ? `${viewingPrescription.pd_near} mm` : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/80">
+                    <span className="text-[10px] text-slate-400 font-sans uppercase block font-bold">Near PD (R / L)</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      {viewingPrescription.pd_near_right || 'N/A'} / {viewingPrescription.pd_near_left || 'N/A'} mm
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Technical Frame Specs Grid */}
-              {(viewingPrescription.a_val || viewingPrescription.b_val || viewingPrescription.dbl_val || viewingPrescription.dia_right || viewingPrescription.base_curve_right) && (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Technical Frame & Lens Metrics</p>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center font-mono">
-                    {viewingPrescription.a_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">A</span><span className="font-bold">{viewingPrescription.a_val}</span></div>}
-                    {viewingPrescription.b_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">B</span><span className="font-bold">{viewingPrescription.b_val}</span></div>}
-                    {viewingPrescription.dbl_val && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">DBL</span><span className="font-bold">{viewingPrescription.dbl_val}</span></div>}
-                    {viewingPrescription.dia_right && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">DIA (R/L)</span><span className="font-bold">{viewingPrescription.dia_right}/{viewingPrescription.dia_left || viewingPrescription.dia_right}</span></div>}
-                    {viewingPrescription.base_curve_right && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">BASE CURVE</span><span className="font-bold">{viewingPrescription.base_curve_right}</span></div>}
-                    {viewingPrescription.panto_angle && <div className="bg-white p-1.5 rounded border border-slate-200"><span className="text-[9px] text-slate-400 block">PANTO</span><span className="font-bold">{viewingPrescription.panto_angle}°</span></div>}
+              {/* Technical Frame Specs & Lens Heights Section (Hidden for Single Vision) */}
+              {viewingPrescription.prescriptionType !== 'single' && (
+                <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                  <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                    Frame Technical Metrics & Lens Heights
+                  </h4>
+
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Section 1: Lens Heights */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-1.5">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Lens Heights
+                      </div>
+                      <div className="text-xs space-y-1 font-mono">
+                        <div className="flex justify-between">
+                          <span className="text-[10px] text-slate-500 font-sans">FH (R / L):</span>
+                          <span className="font-bold">{viewingPrescription.fh_right || viewingPrescription.fittingHeight || 'N/A'} / {viewingPrescription.fh_left || viewingPrescription.fittingHeight || 'N/A'} mm</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[10px] text-slate-500 font-sans">SH (R / L):</span>
+                          <span className="font-bold">{viewingPrescription.sh_right || viewingPrescription.segmentHeight || 'N/A'} / {viewingPrescription.sh_left || viewingPrescription.segmentHeight || 'N/A'} mm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 2: Frame Box Dimensions */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-1.5">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Frame Box Dimensions
+                      </div>
+                      <div className="grid grid-cols-3 gap-1 text-center font-mono text-xs">
+                        <div>
+                          <span className="text-[9px] text-slate-400 block font-sans">A</span>
+                          <span className="font-bold">{viewingPrescription.a_val || '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-400 block font-sans">B</span>
+                          <span className="font-bold">{viewingPrescription.b_val || '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-400 block font-sans">DBL</span>
+                          <span className="font-bold">{viewingPrescription.dbl_val || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 3: Lens & Base Curve */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-1.5">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Lens & Base Curve
+                      </div>
+                      <div className="text-xs space-y-1 font-mono">
+                        <div className="flex justify-between">
+                          <span className="text-[10px] text-slate-500 font-sans">DIA (R / L):</span>
+                          <span className="font-bold">{viewingPrescription.dia_right || '-'}/{viewingPrescription.dia_left || viewingPrescription.dia_right || '-'} mm</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[10px] text-slate-500 font-sans">Base Curve (R / L):</span>
+                          <span className="font-bold">{viewingPrescription.base_curve_right || '-'}/{viewingPrescription.base_curve_left || viewingPrescription.base_curve_right || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Frame Angles */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-1.5">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Frame Angles
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-center font-mono text-xs">
+                        <div>
+                          <span className="text-[9px] text-slate-400 block font-sans">PANTO</span>
+                          <span className="font-bold">{viewingPrescription.panto_angle ? `${viewingPrescription.panto_angle}°` : '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-slate-400 block font-sans">WRAP</span>
+                          <span className="font-bold">{viewingPrescription.wrap_angle ? `${viewingPrescription.wrap_angle}°` : '-'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
