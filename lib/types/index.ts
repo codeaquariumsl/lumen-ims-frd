@@ -96,6 +96,7 @@ export interface Product {
   name: string;
   category?: string;
   subcategory?: string;
+  type?: 'inventory' | 'non-inventory';
   description?: string;
   manufacturer?: string;
   costPrice: number;

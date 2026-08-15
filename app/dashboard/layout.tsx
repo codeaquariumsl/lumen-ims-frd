@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ import {
 export function DashboardSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
@@ -55,52 +56,89 @@ export function DashboardSidebar() {
       {/* Mobile toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden print:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden print:hidden p-2 rounded-lg bg-gray-900 text-white shadow-md"
       >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
+        {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Sidebar */}
+      {/* Auto-Expanding Hover Sidebar */}
       <aside
-        className={`print:hidden fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`group/sidebar print:hidden fixed left-0 top-0 h-screen z-40 bg-gray-900 text-white transition-all duration-300 ease-in-out shadow-xl ${isOpen
+          ? 'w-64 translate-x-0'
+          : '-translate-x-full md:translate-x-0 w-16 hover:w-64'
           }`}
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col overflow-hidden">
           {/* Logo */}
-          <div className="border-b border-gray-800 p-4 flex flex-col items-center text-center">
-            {/* <div className="bg-white p-2 rounded-lg mb-3 w-full flex justify-center">
-              <img src="/assets/logo.jpg" alt="Lumen Optical Logo" className="h-16 w-auto object-contain" />
-            </div> */}
-            <h1 className="text-xl font-bold">Lumen Optical</h1>
-            <p className="mt-1 text-xs text-gray-400">Management Information System</p>
+          <div className="border-b border-gray-800 p-3.5 flex items-center justify-start gap-3 h-16 shrink-0">
+            <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-md overflow-hidden">
+              <img
+                src="/assets/logo.jpg"
+                alt="Lumen Opticals"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            <div className="truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+              <h1 className="text-sm font-bold leading-none truncate text-white">Lumen Optical</h1>
+              <p className="text-[10px] text-gray-400 mt-1 truncate">MIS ERP Suite</p>
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-2 overflow-y-auto p-4">
-            {filteredMenuItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-xs font-medium hover:bg-gray-800 transition-colors">
-                  <item.icon size={20} />
-                  {item.label}
-                </button>
-              </Link>
-            ))}
+          <nav className="flex-1 space-y-1.5 overflow-y-auto p-2 no-scrollbar">
+            {filteredMenuItems.map((item) => {
+              const isActive = item.href === '/dashboard'
+                ? pathname === '/dashboard'
+                : pathname?.startsWith(item.href);
+
+              return (
+                <Link key={item.href} href={item.href} title={item.label}>
+                  <button
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs transition-all relative ${
+                      isActive
+                        ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
+                        : 'text-gray-300 hover:bg-gray-800/90 hover:text-indigo-300 font-medium'
+                    }`}
+                  >
+                    <item.icon
+                      size={20}
+                      className={`shrink-0 transition-colors ${
+                        isActive ? 'text-white' : 'text-gray-400 group-hover/sidebar:text-indigo-400'
+                      }`}
+                    />
+                    <span className="truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <span className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white opacity-0 group-hover/sidebar:opacity-100 transition-opacity"></span>
+                    )}
+                  </button>
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User & Logout */}
-          <div className="border-t border-gray-800 p-2">
-            <div className="rounded-lg bg-gray-800 p-3 mb-3">
-              <p className="text-xs text-gray-400">Logged in as</p>
-              <p className="text-sm font-medium truncate">{user?.name}</p>
-              <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
+          <div className="border-t border-gray-800 p-2 shrink-0">
+            <div className="rounded-xl bg-gray-800/60 p-2 mb-2 flex items-center gap-2.5 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                {user?.name?.[0]?.toUpperCase() || 'U'}
+              </div>
+              <div className="truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
+                <p className="text-xs font-semibold truncate text-white">{user?.name}</p>
+                <p className="text-[10px] text-gray-400 capitalize truncate">{user?.role}</p>
+              </div>
             </div>
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="w-full justify-center gap-2 text-red-500 hover:bg-red-200 hover:text-red-500"
+              className="w-full justify-center gap-2 text-red-400 border-gray-800 hover:bg-red-500/20 hover:text-red-300 h-9 px-2 text-xs"
+              title="Logout"
             >
-              <LogOut size={16} />
-              Logout
+              <LogOut size={16} className="shrink-0" />
+              <span className="truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
+                Logout
+              </span>
             </Button>
           </div>
         </div>
@@ -109,7 +147,7 @@ export function DashboardSidebar() {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -151,7 +189,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen bg-gray-50">
       <DashboardSidebar />
-      <main className="flex-1 md:ml-64 print:ml-0">
+      <main className="flex-1 md:ml-16 print:ml-0 transition-all duration-300">
         <div className="p-6 print:p-0">{children}</div>
       </main>
     </div>

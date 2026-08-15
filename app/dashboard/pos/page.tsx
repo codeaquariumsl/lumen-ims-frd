@@ -37,6 +37,9 @@ interface CartItem {
   price: number;
   quantity: number;
   category?: string;
+  type?: string;
+  discountType?: 'percentage' | 'amount';
+  discountValue?: number;
 }
 
 function POSContent() {
@@ -55,6 +58,8 @@ function POSContent() {
   const [checkedOutSale, setCheckedOutSale] = useState<any | null>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<any | null>(null);
   const [prescriptionCharges, setPrescriptionCharges] = useState<string>('');
+  const [overallDiscountValue, setOverallDiscountValue] = useState<number>(0);
+  const [overallDiscountType, setOverallDiscountType] = useState<'percentage' | 'amount'>('percentage');
 
   // Customer Prescriptions Dialog State
   const [isCustomerRxDialogOpen, setIsCustomerRxDialogOpen] = useState(false);
@@ -85,6 +90,7 @@ function POSContent() {
           name: p.name,
           price: parseFloat(p.selling_price || '0'),
           category: p.category || 'General',
+          type: p.type || 'inventory',
           stock: p.quantity || 0
         }));
         setProducts(mapped);
@@ -199,7 +205,7 @@ function POSContent() {
     const existing = cartItems.find((item) => item.id === product.id);
     const currentQtyInCart = existing ? existing.quantity : 0;
 
-    if (product.stock <= currentQtyInCart) {
+    if (product.type !== 'non-inventory' && product.stock <= currentQtyInCart) {
       alert(`Stock limit reached for "${product.name}". Available stock: ${product.stock}`);
       return;
     }
@@ -229,7 +235,7 @@ function POSContent() {
     }
 
     const product = products.find((p) => p.id === id);
-    if (product && product.stock < quantity) {
+    if (product && product.type !== 'non-inventory' && product.stock < quantity) {
       alert(`Cannot exceed available stock of ${product.stock}.`);
       return;
     }
@@ -241,11 +247,44 @@ function POSContent() {
     );
   };
 
+  // Helper to calculate line item discount amount
+  const getItemDiscountAmount = (item: CartItem) => {
+    const origTotal = item.price * item.quantity;
+    const type = item.discountType || 'percentage';
+    const val = item.discountValue || 0;
+    if (val <= 0) return 0;
+
+    if (type === 'percentage') {
+      return (origTotal * Math.min(100, val)) / 100;
+    } else {
+      return Math.min(origTotal, val * item.quantity);
+    }
+  };
+
+  const updateItemDiscount = (id: string, discountValue: number, discountType: 'percentage' | 'amount' = 'percentage') => {
+    setCartItems(
+      cartItems.map((item) =>
+        item.id === id ? { ...item, discountValue, discountType } : item
+      )
+    );
+  };
+
   // Calculations
   const totalItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const grossSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalItemDiscounts = cartItems.reduce((sum, item) => sum + getItemDiscountAmount(item), 0);
+  const subtotalAfterItemDiscounts = Math.max(0, grossSubtotal - totalItemDiscounts);
+
+  const overallDiscountAmount = overallDiscountValue > 0
+    ? (overallDiscountType === 'percentage'
+      ? (subtotalAfterItemDiscounts * Math.min(100, overallDiscountValue)) / 100
+      : Math.min(subtotalAfterItemDiscounts, overallDiscountValue))
+    : 0;
+
+  const totalAllDiscounts = totalItemDiscounts + overallDiscountAmount;
+  const netSubtotal = Math.max(0, grossSubtotal - totalAllDiscounts);
   const rxCharges = parseFloat(prescriptionCharges || '0') || 0;
-  const total = subtotal + rxCharges;
+  const total = netSubtotal + rxCharges;
 
   // Advance Payment calculations
   const parsedAdvanceInput = parseFloat(advanceAmountInput || '0') || 0;
@@ -299,10 +338,26 @@ function POSContent() {
       const payload = {
         customerId: selectedCustomerId ? parseInt(selectedCustomerId) : undefined,
         prescriptionId: selectedPrescription ? parseInt(selectedPrescription.id) : undefined,
-        items: cartItems.map((item) => ({
-          productId: parseInt(item.id),
-          quantity: item.quantity
-        })),
+        items: cartItems.map((item) => {
+          const origTotal = item.price * item.quantity;
+          const itemDiscAmount = getItemDiscountAmount(item);
+          const lineSubtotalAfterItemDisc = Math.max(0, origTotal - itemDiscAmount);
+
+          let extraOverallShare = 0;
+          if (overallDiscountAmount > 0 && subtotalAfterItemDiscounts > 0) {
+            extraOverallShare = (lineSubtotalAfterItemDisc / subtotalAfterItemDiscounts) * overallDiscountAmount;
+          }
+
+          const totalLineDiscAmount = itemDiscAmount + extraOverallShare;
+          const discPct = origTotal > 0 ? (totalLineDiscAmount / origTotal) * 100 : 0;
+
+          return {
+            productId: parseInt(item.id),
+            quantity: item.quantity,
+            discountPercentage: discPct,
+            discountAmount: totalLineDiscAmount
+          };
+        }),
         paymentMethod: paymentMethod,
         paymentStatus: paymentStatus,
         prescriptionCharges: rxCharges,
@@ -432,10 +487,10 @@ function POSContent() {
           </div>
         )}
 
-        {/* Main Grid: Products Left (2 col), Cart Right (1 col) */}
-        <div className="grid gap-4 lg:grid-cols-3">
+        {/* Main Grid: Products Left (7 col), Cart Right (5 col) */}
+        <div className="grid gap-3.5 lg:grid-cols-12">
           {/* Products Column */}
-          <div className="col-span-2 space-y-3">
+          <div className="lg:col-span-7 xl:col-span-7 space-y-3">
             {/* Search & Category Filter Bar */}
             <Card className="p-3 bg-white border border-slate-200 shadow-sm rounded-xl">
               <div className="relative">
@@ -488,10 +543,11 @@ function POSContent() {
                 No products found matching your search.
               </div>
             ) : (
-              <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3">
                 {filteredProducts.map((product) => {
                   const itemInCart = cartItems.find((item) => item.id === product.id);
-                  const isOutOfStock = product.stock <= 0;
+                  const isNonInventory = product.type === 'non-inventory';
+                  const isOutOfStock = !isNonInventory && product.stock <= 0;
 
                   return (
                     <Card
@@ -510,16 +566,18 @@ function POSContent() {
                           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
                             {product.category}
                           </span>
-                          <span
-                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isOutOfStock
-                              ? 'bg-red-100 text-red-700'
-                              : product.stock <= 5
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-emerald-100 text-emerald-800'
-                              }`}
-                          >
-                            {isOutOfStock ? 'Out of Stock' : `${product.stock} in stock`}
-                          </span>
+                          {!isNonInventory && (
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isOutOfStock
+                                ? 'bg-red-100 text-red-700'
+                                : product.stock <= 5
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                            >
+                              {isOutOfStock ? 'Out of Stock' : `${product.stock} in stock`}
+                            </span>
+                          )}
                         </div>
                         <h4 className="font-semibold text-xs text-slate-900 line-clamp-2 min-h-[32px] group-hover:text-indigo-600 transition-colors">
                           {product.name}
@@ -540,7 +598,7 @@ function POSContent() {
                             e.stopPropagation();
                             addToCart(product);
                           }}
-                          className="h-7 px-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg gap-1"
+                          className="h-7 px-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg gap-1 shadow-2xs"
                         >
                           <Plus size={13} />
                           Add
@@ -554,11 +612,13 @@ function POSContent() {
           </div>
 
           {/* Cart Sidebar Column */}
-          <div className="space-y-2">
+          <div className="lg:col-span-5 xl:col-span-5 space-y-2">
             <Card className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl sticky top-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div className="flex items-center gap-2">
-                  <ShoppingCart size={18} className="text-slate-900" />
+                  <div className="p-1.5 rounded-lg bg-slate-900 text-white">
+                    <ShoppingCart size={16} />
+                  </div>
                   <h2 className="text-sm font-bold text-slate-900">Current Order</h2>
                 </div>
                 {cartItems.length > 0 && (
@@ -665,7 +725,7 @@ function POSContent() {
               </div>
 
               {/* Cart Items List */}
-              <div className="max-h-52 overflow-y-auto space-y-1.5 pr-0.5 divide-y divide-slate-100">
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-0.5 divide-y divide-slate-100">
                 {cartItems.length === 0 ? (
                   <div className="py-5 text-center border-2 border-dashed border-slate-100 rounded-xl">
                     <ShoppingCart size={24} className="mx-auto mb-1 text-slate-300" />
@@ -673,46 +733,166 @@ function POSContent() {
                     <p className="text-[10px] text-slate-400">Add products to build order</p>
                   </div>
                 ) : (
-                  cartItems.map((item) => (
-                    <div key={item.id} className="pt-1.5 first:pt-0 flex items-center justify-between text-xs gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">{item.name}</p>
-                        <p className="text-[11px] text-slate-500 font-mono">
-                          LKR {item.price.toFixed(2)} × {item.quantity}
-                        </p>
-                      </div>
+                  cartItems.map((item) => {
+                    const origLineTotal = item.price * item.quantity;
+                    const itemDiscAmount = getItemDiscountAmount(item);
+                    const lineNetTotal = origLineTotal - itemDiscAmount;
 
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-1 bg-slate-100 rounded-md p-0.5 shrink-0">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-5 h-5 flex items-center justify-center bg-white hover:bg-slate-200 rounded text-slate-700 transition-colors"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <span className="w-5 text-center font-bold text-xs text-slate-900">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-5 h-5 flex items-center justify-center bg-white hover:bg-slate-200 rounded text-slate-700 transition-colors"
-                        >
-                          <Plus size={11} />
-                        </button>
-                      </div>
+                    return (
+                      <div key={item.id} className="pt-2 pb-1.5 first:pt-0 border-b border-slate-100 last:border-0 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-900 truncate">{item.name}</p>
+                            <p className="text-[11px] text-slate-500 font-mono">
+                              LKR {item.price.toFixed(2)} × {item.quantity}
+                            </p>
+                          </div>
 
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-slate-900 font-mono text-xs">
-                          {(item.price * item.quantity).toFixed(2)}
-                        </p>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-slate-400 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                          {/* Direct Editable Quantity Input Controls */}
+                          <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200 rounded-md p-0.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="w-5 h-5 flex items-center justify-center bg-white hover:bg-slate-200 rounded text-slate-700 font-bold transition-colors shadow-2xs"
+                              title="Decrease quantity"
+                            >
+                              <Minus size={11} />
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                              className="w-7 h-5 text-center font-bold text-xs text-slate-900 bg-transparent border-none focus:outline-none focus:bg-white rounded p-0"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="w-5 h-5 flex items-center justify-center bg-white hover:bg-slate-200 rounded text-slate-700 font-bold transition-colors shadow-2xs"
+                              title="Increase quantity"
+                            >
+                              <Plus size={11} />
+                            </button>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <p className="font-bold text-slate-900 font-mono text-xs">
+                              LKR {lineNetTotal.toFixed(2)}
+                            </p>
+                            {itemDiscAmount > 0 && (
+                              <p className="text-[10px] text-slate-400 font-mono line-through">
+                                LKR {origLineTotal.toFixed(2)}
+                              </p>
+                            )}
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-slate-400 hover:text-red-600 transition-colors mt-0.5"
+                              title="Remove item"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Enhanced Item Discount Input Bar with Micro-Pill Presets */}
+                        <div className="flex flex-wrap items-center justify-between bg-slate-50 border border-slate-200/80 rounded-lg px-2 py-1 text-[11px] gap-1">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Disc:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={item.discountValue !== undefined && item.discountValue > 0 ? item.discountValue : ''}
+                              onChange={(e) => updateItemDiscount(item.id, Math.max(0, parseFloat(e.target.value) || 0), item.discountType || 'percentage')}
+                              className="w-11 h-5 text-xs font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded px-1 text-right focus:outline-none focus:ring-1 focus:ring-slate-900"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateItemDiscount(item.id, item.discountValue || 0, item.discountType === 'amount' ? 'percentage' : 'amount')}
+                              className="h-5 px-1.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold font-mono transition-colors"
+                              title="Toggle between % discount and LKR discount per unit"
+                            >
+                              {item.discountType === 'amount' ? 'LKR' : '%'}
+                            </button>
+                          </div>
+
+                          {/* Quick Discount Presets */}
+                          <div className="flex items-center gap-0.5">
+                            {[5, 10, 15, 20].map((pct) => (
+                              <button
+                                key={pct}
+                                type="button"
+                                onClick={() => updateItemDiscount(item.id, pct, 'percentage')}
+                                className={`px-1.5 py-0.5 text-[9px] font-bold font-mono rounded transition-colors ${item.discountType === 'percentage' && item.discountValue === pct
+                                  ? 'bg-emerald-600 text-white shadow-2xs'
+                                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                                  }`}
+                              >
+                                {pct}%
+                              </button>
+                            ))}
+                          </div>
+
+                          {itemDiscAmount > 0 && (
+                            <span className="text-[10px] font-bold text-emerald-700 font-mono ml-auto">
+                              -LKR {itemDiscAmount.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
+              </div>
+
+              {/* Overall Order Discount Input */}
+              <div className="pt-2 border-t border-slate-100 space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                    Overall Order Discount
+                  </label>
+                  <div className="flex items-center gap-0.5">
+                    {[5, 10, 15].map((pct) => (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => {
+                          setOverallDiscountType('percentage');
+                          setOverallDiscountValue(pct);
+                        }}
+                        className={`px-1.5 py-0.5 text-[9px] font-bold font-mono rounded transition-colors ${overallDiscountType === 'percentage' && overallDiscountValue === pct
+                          ? 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                      {overallDiscountType === 'amount' ? 'LKR' : '%'}
+                    </span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={overallDiscountValue > 0 ? overallDiscountValue : ''}
+                      onChange={(e) => setOverallDiscountValue(Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="pl-10 text-xs h-8 font-mono font-semibold"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOverallDiscountType(overallDiscountType === 'amount' ? 'percentage' : 'amount')}
+                    className="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 text-xs font-bold font-mono transition-colors"
+                  >
+                    {overallDiscountType === 'amount' ? 'LKR Off' : '% Off'}
+                  </button>
+                </div>
               </div>
 
               {/* Prescription Charges Input */}
@@ -735,15 +915,27 @@ function POSContent() {
               </div>
 
               {/* Bill Summary */}
-              <div className="pt-1 border-t border-slate-200 space-y-1.5 text-xs">
+              <div className="pt-2 border-t border-slate-200 space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-600">
-                  <span>Subtotal ({totalItemCount} items):</span>
-                  <span className="font-mono font-medium">LKR {subtotal.toFixed(2)}</span>
+                  <span>Gross Items Subtotal ({totalItemCount} items):</span>
+                  <span className="font-mono font-medium">LKR {grossSubtotal.toFixed(2)}</span>
                 </div>
+                {totalItemDiscounts > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Item Discounts:</span>
+                    <span className="font-mono">- LKR {totalItemDiscounts.toFixed(2)}</span>
+                  </div>
+                )}
+                {overallDiscountAmount > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-semibold">
+                    <span>Overall Order Discount:</span>
+                    <span className="font-mono">- LKR {overallDiscountAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 {rxCharges > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-medium">
+                  <div className="flex justify-between text-indigo-700 font-medium">
                     <span>Prescription Fee:</span>
-                    <span className="font-mono">LKR {rxCharges.toFixed(2)}</span>
+                    <span className="font-mono">+ LKR {rxCharges.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-slate-100">
@@ -955,7 +1147,7 @@ function POSContent() {
                     type="button"
                     onClick={() => {
                       setPaymentType('advance');
-                      setAdvanceAmountInput((total * 0.5).toFixed(2));
+                      setAdvanceAmountInput((total).toFixed(2));
                     }}
                     className={`py-2 px-3 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${paymentType === 'advance'
                       ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
