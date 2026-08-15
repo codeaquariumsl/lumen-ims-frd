@@ -817,193 +817,195 @@ export default function PrescriptionsPage() {
                 </div>
               </div>
 
-              {/* Fitting Heights, Segment Heights & Technical Frame Specs */}
-              <div className="bg-slate-50/70 p-3.5 rounded-lg border border-slate-200 space-y-3">
-                <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
-                  Frame Technical Metrics & Lens Heights
-                </h4>
-                
-                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  {/* Section 1: Lens Heights */}
-                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
-                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
-                      Lens Heights
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">FH R/L (mm)</label>
-                        <div className="flex gap-1">
-                          <Input
-                            type="number"
-                            step="0.1"
-                            value={formData.fh_right}
-                            onChange={(e) => setFormData({ ...formData, fh_right: e.target.value, fittingHeight: e.target.value })}
-                            placeholder="R"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                          <Input
-                            type="number"
-                            step="0.1"
-                            value={formData.fh_left}
-                            onChange={(e) => setFormData({ ...formData, fh_left: e.target.value })}
-                            placeholder="L"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">SH R/L (mm)</label>
-                        <div className="flex gap-1">
-                          <Input
-                            type="number"
-                            step="0.1"
-                            value={formData.sh_right}
-                            onChange={(e) => setFormData({ ...formData, sh_right: e.target.value, segmentHeight: e.target.value })}
-                            placeholder="R"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                          <Input
-                            type="number"
-                            step="0.1"
-                            value={formData.sh_left}
-                            onChange={(e) => setFormData({ ...formData, sh_left: e.target.value })}
-                            placeholder="L"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Fitting Heights, Segment Heights & Technical Frame Specs section (Hidden for Single Vision) */}
+              {formData.prescriptionType !== 'single' && (
+                <div className="bg-slate-50/70 p-3.5 rounded-lg border border-slate-200 space-y-3">
+                  <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                    Frame Technical Metrics & Lens Heights
+                  </h4>
 
-                  {/* Section 2: Frame Box Dimensions */}
-                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
-                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
-                      Frame Box Dimensions
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">A (mm)</label>
-                        <Input
-                          type="text"
-                          value={formData.a_val}
-                          onChange={(e) => setFormData({ ...formData, a_val: e.target.value })}
-                          placeholder="52"
-                          className="text-xs h-8 font-mono text-center px-1"
-                        />
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Section 1: Lens Heights */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Lens Heights
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">B (mm)</label>
-                        <Input
-                          type="text"
-                          value={formData.b_val}
-                          onChange={(e) => setFormData({ ...formData, b_val: e.target.value })}
-                          placeholder="38"
-                          className="text-xs h-8 font-mono text-center px-1"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DBL</label>
-                        <Input
-                          type="text"
-                          value={formData.dbl_val}
-                          onChange={(e) => setFormData({ ...formData, dbl_val: e.target.value })}
-                          placeholder="18"
-                          className="text-xs h-8 font-mono text-center px-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 3: Lens & Base Curve */}
-                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
-                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
-                      Lens & Base Curve
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DIA R/L (mm)</label>
-                        <div className="flex gap-1">
-                          <Input
-                            type="text"
-                            value={formData.dia_right}
-                            onChange={(e) => setFormData({ ...formData, dia_right: e.target.value })}
-                            placeholder="70"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                          <Input
-                            type="text"
-                            value={formData.dia_left}
-                            onChange={(e) => setFormData({ ...formData, dia_left: e.target.value })}
-                            placeholder="70"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">FH R/L (mm)</label>
+                          <div className="flex gap-1">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={formData.fh_right}
+                              onChange={(e) => setFormData({ ...formData, fh_right: e.target.value, fittingHeight: e.target.value })}
+                              placeholder="R"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={formData.fh_left}
+                              onChange={(e) => setFormData({ ...formData, fh_left: e.target.value })}
+                              placeholder="L"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Base Curve R/L</label>
-                        <div className="flex gap-1">
-                          <Input
-                            type="text"
-                            value={formData.base_curve_right}
-                            onChange={(e) => setFormData({ ...formData, base_curve_right: e.target.value })}
-                            placeholder="4"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
-                          <Input
-                            type="text"
-                            value={formData.base_curve_left}
-                            onChange={(e) => setFormData({ ...formData, base_curve_left: e.target.value })}
-                            placeholder="4"
-                            className="text-xs h-8 px-1.5 text-center font-mono"
-                          />
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">SH R/L (mm)</label>
+                          <div className="flex gap-1">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={formData.sh_right}
+                              onChange={(e) => setFormData({ ...formData, sh_right: e.target.value, segmentHeight: e.target.value })}
+                              placeholder="R"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={formData.sh_left}
+                              onChange={(e) => setFormData({ ...formData, sh_left: e.target.value })}
+                              placeholder="L"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Section 4: Frame Angles */}
-                  <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
-                    <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
-                      Frame Angles
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Panto (°)</label>
-                        <Input
-                          type="text"
-                          value={formData.panto_angle}
-                          onChange={(e) => setFormData({ ...formData, panto_angle: e.target.value })}
-                          placeholder="8"
-                          className="text-xs h-8 font-mono text-center px-1"
-                        />
+                    {/* Section 2: Frame Box Dimensions */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Frame Box Dimensions
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Wrap (°)</label>
-                        <Input
-                          type="text"
-                          value={formData.wrap_angle}
-                          onChange={(e) => setFormData({ ...formData, wrap_angle: e.target.value })}
-                          placeholder="5"
-                          className="text-xs h-8 font-mono text-center px-1"
-                        />
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">A (mm)</label>
+                          <Input
+                            type="text"
+                            value={formData.a_val}
+                            onChange={(e) => setFormData({ ...formData, a_val: e.target.value })}
+                            placeholder="52"
+                            className="text-xs h-8 font-mono text-center px-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">B (mm)</label>
+                          <Input
+                            type="text"
+                            value={formData.b_val}
+                            onChange={(e) => setFormData({ ...formData, b_val: e.target.value })}
+                            placeholder="38"
+                            className="text-xs h-8 font-mono text-center px-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DBL</label>
+                          <Input
+                            type="text"
+                            value={formData.dbl_val}
+                            onChange={(e) => setFormData({ ...formData, dbl_val: e.target.value })}
+                            placeholder="18"
+                            className="text-xs h-8 font-mono text-center px-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 3: Lens & Base Curve */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Lens & Base Curve
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">DIA R/L (mm)</label>
+                          <div className="flex gap-1">
+                            <Input
+                              type="text"
+                              value={formData.dia_right}
+                              onChange={(e) => setFormData({ ...formData, dia_right: e.target.value })}
+                              placeholder="70"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                            <Input
+                              type="text"
+                              value={formData.dia_left}
+                              onChange={(e) => setFormData({ ...formData, dia_left: e.target.value })}
+                              placeholder="70"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Base Curve R/L</label>
+                          <div className="flex gap-1">
+                            <Input
+                              type="text"
+                              value={formData.base_curve_right}
+                              onChange={(e) => setFormData({ ...formData, base_curve_right: e.target.value })}
+                              placeholder="4"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                            <Input
+                              type="text"
+                              value={formData.base_curve_left}
+                              onChange={(e) => setFormData({ ...formData, base_curve_left: e.target.value })}
+                              placeholder="4"
+                              className="text-xs h-8 px-1.5 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Frame Angles */}
+                    <div className="bg-white p-2.5 rounded-md border border-slate-200/80 space-y-2">
+                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-1">
+                        Frame Angles
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Panto (°)</label>
+                          <Input
+                            type="text"
+                            value={formData.panto_angle}
+                            onChange={(e) => setFormData({ ...formData, panto_angle: e.target.value })}
+                            placeholder="8"
+                            className="text-xs h-8 font-mono text-center px-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Wrap (°)</label>
+                          <Input
+                            type="text"
+                            value={formData.wrap_angle}
+                            onChange={(e) => setFormData({ ...formData, wrap_angle: e.target.value })}
+                            placeholder="5"
+                            className="text-xs h-8 font-mono text-center px-1"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              )}
 
-                {/* Full-Width Remarks & Instructions Field */}
-                <div className="pt-1.5 border-t border-slate-200/60">
-                  <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Prescription Remarks & Clinical Instructions
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.remarks}
-                    onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                    placeholder="Enter special instructions (e.g., Anti-Reflective coating, Blue Light filter, Hydrophobic, Prism notes, specific tint)..."
-                    className="w-full text-xs h-9 bg-white border-slate-300 focus:ring-slate-900 font-medium text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
+              {/* Full-Width Remarks & Instructions Field */}
+              <div className="pt-1.5 border-t border-slate-200/60">
+                <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Prescription Remarks & Clinical Instructions
+                </label>
+                <Input
+                  type="text"
+                  value={formData.remarks}
+                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                  placeholder="Enter special instructions (e.g., Anti-Reflective coating, Blue Light filter, Hydrophobic, Prism notes, specific tint)..."
+                  className="w-full text-xs h-9 bg-white border-slate-300 focus:ring-slate-900 font-medium text-slate-900 placeholder:text-slate-400"
+                />
               </div>
             </div>
 
