@@ -80,26 +80,26 @@ const initialFormData = {
   prescriptionType: 'single',
 
   // Right Eye (OD)
-  od_sph: 0,
-  od_cyl: 0,
-  od_axis: 0,
-  od_add: 0,
+  od_sph: '0.00',
+  od_cyl: '0.00',
+  od_axis: '0',
+  od_add: '0.00',
   od_va: '6/6',
 
   // Left Eye (OS)
-  os_sph: 0,
-  os_cyl: 0,
-  os_axis: 0,
-  os_add: 0,
+  os_sph: '0.00',
+  os_cyl: '0.00',
+  os_axis: '0',
+  os_add: '0.00',
   os_va: '6/6',
 
   // PD
-  pd: 62,
-  pd_right: 31,
-  pd_left: 31,
-  pd_near: 0,
-  pd_near_right: 0,
-  pd_near_left: 0,
+  pd: '62',
+  pd_right: '31',
+  pd_left: '31',
+  pd_near: '0',
+  pd_near_right: '0',
+  pd_near_left: '0',
 
   // Heights
   fittingHeight: '',
@@ -322,24 +322,24 @@ export default function PrescriptionsPage() {
         prescriptionDate: formData.prescriptionDate,
         prescriptionType: formData.prescriptionType,
 
-        od_sph: formData.od_sph,
-        od_cyl: formData.od_cyl,
-        od_axis: formData.od_axis,
-        od_add: formData.od_add,
+        od_sph: parseFloat(String(formData.od_sph)) || 0,
+        od_cyl: parseFloat(String(formData.od_cyl)) || 0,
+        od_axis: parseInt(String(formData.od_axis), 10) || 0,
+        od_add: parseFloat(String(formData.od_add)) || 0,
         od_va: formData.od_va,
 
-        os_sph: formData.os_sph,
-        os_cyl: formData.os_cyl,
-        os_axis: formData.os_axis,
-        os_add: formData.os_add,
+        os_sph: parseFloat(String(formData.os_sph)) || 0,
+        os_cyl: parseFloat(String(formData.os_cyl)) || 0,
+        os_axis: parseInt(String(formData.os_axis), 10) || 0,
+        os_add: parseFloat(String(formData.os_add)) || 0,
         os_va: formData.os_va,
 
-        pd: formData.pd,
-        pd_right: formData.pd_right,
-        pd_left: formData.pd_left,
-        pd_near: formData.pd_near,
-        pd_near_right: formData.pd_near_right,
-        pd_near_left: formData.pd_near_left,
+        pd: parseFloat(String(formData.pd)) || 62,
+        pd_right: formData.pd_right !== '' ? parseFloat(String(formData.pd_right)) : undefined,
+        pd_left: formData.pd_left !== '' ? parseFloat(String(formData.pd_left)) : undefined,
+        pd_near: formData.pd_near !== '' ? parseFloat(String(formData.pd_near)) : undefined,
+        pd_near_right: formData.pd_near_right !== '' ? parseFloat(String(formData.pd_near_right)) : undefined,
+        pd_near_left: formData.pd_near_left !== '' ? parseFloat(String(formData.pd_near_left)) : undefined,
 
         fittingHeight: formData.fittingHeight ? parseFloat(String(formData.fittingHeight)) : undefined,
         segmentHeight: formData.segmentHeight ? parseFloat(String(formData.segmentHeight)) : undefined,
@@ -387,28 +387,28 @@ export default function PrescriptionsPage() {
       age: prescription.age ? prescription.age.toString() : '',
       prescriptionDate: prescription.prescriptionDate,
       prescriptionType: prescription.prescriptionType,
-      od_sph: prescription.od_sph,
-      od_cyl: prescription.od_cyl,
-      od_axis: prescription.od_axis,
-      od_add: prescription.od_add || 0,
+      od_sph: prescription.od_sph !== undefined ? String(prescription.od_sph) : '0.00',
+      od_cyl: prescription.od_cyl !== undefined ? String(prescription.od_cyl) : '0.00',
+      od_axis: prescription.od_axis !== undefined ? String(prescription.od_axis) : '0',
+      od_add: prescription.od_add !== undefined ? String(prescription.od_add) : '0.00',
       od_va: prescription.od_va || '6/6',
-      os_sph: prescription.os_sph,
-      os_cyl: prescription.os_cyl,
-      os_axis: prescription.os_axis,
-      os_add: prescription.os_add || 0,
+      os_sph: prescription.os_sph !== undefined ? String(prescription.os_sph) : '0.00',
+      os_cyl: prescription.os_cyl !== undefined ? String(prescription.os_cyl) : '0.00',
+      os_axis: prescription.os_axis !== undefined ? String(prescription.os_axis) : '0',
+      os_add: prescription.os_add !== undefined ? String(prescription.os_add) : '0.00',
       os_va: prescription.os_va || '6/6',
-      pd: prescription.pd,
-      pd_right: prescription.pd_right || Math.round(prescription.pd / 2),
-      pd_left: prescription.pd_left || Math.round(prescription.pd / 2),
-      pd_near: prescription.pd_near || 0,
-      pd_near_right: prescription.pd_near_right || 0,
-      pd_near_left: prescription.pd_near_left || 0,
-      fittingHeight: prescription.fittingHeight ? prescription.fittingHeight.toString() : '',
-      segmentHeight: prescription.segmentHeight ? prescription.segmentHeight.toString() : '',
-      fh_right: prescription.fh_right ? prescription.fh_right.toString() : '',
-      fh_left: prescription.fh_left ? prescription.fh_left.toString() : '',
-      sh_right: prescription.sh_right ? prescription.sh_right.toString() : '',
-      sh_left: prescription.sh_left ? prescription.sh_left.toString() : '',
+      pd: prescription.pd !== undefined ? String(prescription.pd) : '62',
+      pd_right: prescription.pd_right !== undefined ? String(prescription.pd_right) : '',
+      pd_left: prescription.pd_left !== undefined ? String(prescription.pd_left) : '',
+      pd_near: prescription.pd_near !== undefined ? String(prescription.pd_near) : '',
+      pd_near_right: prescription.pd_near_right !== undefined ? String(prescription.pd_near_right) : '',
+      pd_near_left: prescription.pd_near_left !== undefined ? String(prescription.pd_near_left) : '',
+      fittingHeight: prescription.fittingHeight !== undefined ? String(prescription.fittingHeight) : '',
+      segmentHeight: prescription.segmentHeight !== undefined ? String(prescription.segmentHeight) : '',
+      fh_right: prescription.fh_right !== undefined ? String(prescription.fh_right) : '',
+      fh_left: prescription.fh_left !== undefined ? String(prescription.fh_left) : '',
+      sh_right: prescription.sh_right !== undefined ? String(prescription.sh_right) : '',
+      sh_left: prescription.sh_left !== undefined ? String(prescription.sh_left) : '',
       a_val: prescription.a_val || '',
       b_val: prescription.b_val || '',
       dbl_val: prescription.dbl_val || '',
@@ -622,11 +622,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">SPH</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.od_sph}
                         onChange={(e) =>
-                          setFormData({ ...formData, od_sph: parseFloat(e.target.value) })
+                          setFormData({ ...formData, od_sph: e.target.value })
                         }
                         placeholder="-1.50"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -635,11 +635,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">CYL</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.od_cyl}
                         onChange={(e) =>
-                          setFormData({ ...formData, od_cyl: parseFloat(e.target.value) })
+                          setFormData({ ...formData, od_cyl: e.target.value })
                         }
                         placeholder="-0.75"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -648,12 +648,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
                       <Input
-                        type="number"
-                        min="0"
-                        max="180"
+                        type="text"
+                        inputMode="numeric"
                         value={formData.od_axis}
                         onChange={(e) =>
-                          setFormData({ ...formData, od_axis: parseInt(e.target.value) })
+                          setFormData({ ...formData, od_axis: e.target.value })
                         }
                         placeholder="180"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -662,11 +661,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">ADD</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.od_add}
                         onChange={(e) =>
-                          setFormData({ ...formData, od_add: parseFloat(e.target.value) })
+                          setFormData({ ...formData, od_add: e.target.value })
                         }
                         placeholder="+2.00"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -700,11 +699,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">SPH</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.os_sph}
                         onChange={(e) =>
-                          setFormData({ ...formData, os_sph: parseFloat(e.target.value) })
+                          setFormData({ ...formData, os_sph: e.target.value })
                         }
                         placeholder="-1.25"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -713,11 +712,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">CYL</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.os_cyl}
                         onChange={(e) =>
-                          setFormData({ ...formData, os_cyl: parseFloat(e.target.value) })
+                          setFormData({ ...formData, os_cyl: e.target.value })
                         }
                         placeholder="-0.50"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -726,12 +725,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">AXIS</label>
                       <Input
-                        type="number"
-                        min="0"
-                        max="180"
+                        type="text"
+                        inputMode="numeric"
                         value={formData.os_axis}
                         onChange={(e) =>
-                          setFormData({ ...formData, os_axis: parseInt(e.target.value) })
+                          setFormData({ ...formData, os_axis: e.target.value })
                         }
                         placeholder="175"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -740,11 +738,11 @@ export default function PrescriptionsPage() {
                     <div>
                       <label className="text-[10px] font-medium text-slate-600 mb-0.5 block">ADD</label>
                       <Input
-                        type="number"
-                        step="0.25"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.os_add}
                         onChange={(e) =>
-                          setFormData({ ...formData, os_add: parseFloat(e.target.value) })
+                          setFormData({ ...formData, os_add: e.target.value })
                         }
                         placeholder="+2.00"
                         className="text-xs h-8 px-1.5 text-center font-mono"
@@ -773,10 +771,10 @@ export default function PrescriptionsPage() {
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">Total PD (mm)</label>
                     <Input
-                      type="number"
-                      step="0.5"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.pd}
-                      onChange={(e) => setFormData({ ...formData, pd: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, pd: e.target.value })}
                       placeholder="62"
                       className="text-xs h-8 font-mono"
                     />
@@ -784,10 +782,10 @@ export default function PrescriptionsPage() {
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Right (mm)</label>
                     <Input
-                      type="number"
-                      step="0.5"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.pd_right}
-                      onChange={(e) => setFormData({ ...formData, pd_right: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, pd_right: e.target.value })}
                       placeholder="31"
                       className="text-xs h-8 font-mono"
                     />
@@ -795,10 +793,10 @@ export default function PrescriptionsPage() {
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Left (mm)</label>
                     <Input
-                      type="number"
-                      step="0.5"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.pd_left}
-                      onChange={(e) => setFormData({ ...formData, pd_left: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, pd_left: e.target.value })}
                       placeholder="31"
                       className="text-xs h-8 font-mono"
                     />
@@ -806,10 +804,10 @@ export default function PrescriptionsPage() {
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">PD Near (mm)</label>
                     <Input
-                      type="number"
-                      step="0.5"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.pd_near}
-                      onChange={(e) => setFormData({ ...formData, pd_near: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, pd_near: e.target.value })}
                       placeholder="58"
                       className="text-xs h-8 font-mono"
                     />
@@ -835,16 +833,16 @@ export default function PrescriptionsPage() {
                           <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">FH R/L (mm)</label>
                           <div className="flex gap-1">
                             <Input
-                              type="number"
-                              step="0.1"
+                              type="text"
+                              inputMode="decimal"
                               value={formData.fh_right}
                               onChange={(e) => setFormData({ ...formData, fh_right: e.target.value, fittingHeight: e.target.value })}
                               placeholder="R"
                               className="text-xs h-8 px-1.5 text-center font-mono"
                             />
                             <Input
-                              type="number"
-                              step="0.1"
+                              type="text"
+                              inputMode="decimal"
                               value={formData.fh_left}
                               onChange={(e) => setFormData({ ...formData, fh_left: e.target.value })}
                               placeholder="L"
@@ -856,16 +854,16 @@ export default function PrescriptionsPage() {
                           <label className="block text-[10px] font-semibold text-slate-600 uppercase mb-0.5">SH R/L (mm)</label>
                           <div className="flex gap-1">
                             <Input
-                              type="number"
-                              step="0.1"
+                              type="text"
+                              inputMode="decimal"
                               value={formData.sh_right}
                               onChange={(e) => setFormData({ ...formData, sh_right: e.target.value, segmentHeight: e.target.value })}
                               placeholder="R"
                               className="text-xs h-8 px-1.5 text-center font-mono"
                             />
                             <Input
-                              type="number"
-                              step="0.1"
+                              type="text"
+                              inputMode="decimal"
                               value={formData.sh_left}
                               onChange={(e) => setFormData({ ...formData, sh_left: e.target.value })}
                               placeholder="L"

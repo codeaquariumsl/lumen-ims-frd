@@ -1360,7 +1360,7 @@ function POSContent() {
           <div className="space-y-1.5 text-xs font-mono border-b border-dashed pb-3 mb-4 flex flex-col items-end">
             <div className="flex justify-between w-56 text-gray-500">
               <span>Subtotal:</span>
-              <span>LKR.{parseFloat(checkedOutSale.total_amount || subtotal).toFixed(2)}</span>
+              <span>LKR.{parseFloat(checkedOutSale.total_amount || '0').toFixed(2)}</span>
             </div>
             {checkedOutSale.prescription_charges > 0 && (
               <div className="flex justify-between w-56 text-gray-600 font-semibold">
@@ -1370,7 +1370,7 @@ function POSContent() {
             )}
             <div className="flex justify-between w-56 font-bold border-t border-dashed pt-1 mt-1">
               <span>Grand Total:</span>
-              <span>LKR.{(parseFloat(checkedOutSale.net_amount || subtotal) + (checkedOutSale.prescription_charges || 0)).toFixed(2)}</span>
+              <span>LKR.{(parseFloat(checkedOutSale.net_amount || '0') + (checkedOutSale.prescription_charges || 0)).toFixed(2)}</span>
             </div>
 
             {/* Advance Payment Details on Receipt */}
