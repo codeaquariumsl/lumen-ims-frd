@@ -364,19 +364,8 @@ export default function InventoryPage() {
     0
   );
 
-  const getCategoryBadgeClass = (category: string) => {
-    const colors: Record<string, string> = {
-      frames: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      lenses: 'bg-blue-50 text-blue-700 border-blue-200',
-      services: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      accessories: 'bg-purple-50 text-purple-700 border-purple-200',
-      'contact-lens': 'bg-teal-50 text-teal-700 border-teal-200',
-    };
-    return colors[category.toLowerCase()] || 'bg-slate-100 text-slate-700 border-slate-200';
-  };
-
-  // Helper Code128 SVG renderer
-  const renderBarcodeSvg = (text: string) => {
+  // Helper to generate vector Code128 SVG string for 2in x 1in stickers
+  const generateBarcodeSvgString = (text: string, height = 24) => {
     const CODE128_PATTERNS: { [key: number]: string } = {
       0: "212222", 1: "222122", 2: "222221", 3: "121223", 4: "121322", 5: "131222", 6: "122213", 7: "122312", 8: "132212", 9: "221213",
       10: "221312", 11: "231212", 12: "112232", 13: "122132", 14: "122231", 15: "113222", 16: "123122", 17: "123221", 18: "223211", 19: "221132",
@@ -409,7 +398,7 @@ export default function InventoryPage() {
 
     let x = 0;
     const rects: string[] = [];
-    const barHeight = 45;
+    const barHeight = height;
     for (let i = 0; i < pattern.length; i++) {
       const width = parseInt(pattern[i], 10);
       if (i % 2 === 0) {
@@ -418,39 +407,220 @@ export default function InventoryPage() {
       x += width;
     }
 
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x} ${barHeight}" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">${rects.join('')}</svg>`;
+  };
+
+  // Helper Code128 SVG component renderer for React
+  const renderBarcodeSvg = (text: string) => {
     return (
-      <svg
-        viewBox={`0 0 ${x} ${barHeight}`}
-        className="w-full h-10 mx-auto"
-        preserveAspectRatio="none"
-        dangerouslySetInnerHTML={{ __html: rects.join('') }}
+      <div
+        className="w-full h-[20px] mx-auto flex items-center justify-center"
+        dangerouslySetInnerHTML={{ __html: generateBarcodeSvgString(text, 24) }}
       />
     );
   };
 
+  // Print Barcode Sticker (2in x 1in) using an isolated invisible iframe without touching the main window
+  const handlePrintSticker = (item: InventoryItem) => {
+    setSavedItemForPrint(item);
+    setShowStickerPrintView(true);
+
+    const barcodeText = item.barcode || `01${item.code}`;
+    const barcodeSvgMarkup = generateBarcodeSvgString(barcodeText, 24);
+    const itemName = item.name ? item.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+    const itemCode = item.code ? item.code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+    const formattedPrice = Number(item.sellingPrice || 0).toLocaleString();
+
+    // Create an isolated hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title></title>
+          <style>
+            @page {
+              size: 2in 1in portrait;
+              margin: 0mm !important;
+            }
+            @page :first {
+              margin: 0mm !important;
+            }
+            @page :left {
+              margin: 0mm !important;
+            }
+            @page :right {
+              margin: 0mm !important;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+            }
+            html, body {
+              width: 2in;
+              height: 1in;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            @media print {
+              @page {
+                size: 2in 1in portrait;
+                margin: 0mm !important;
+              }
+              html, body {
+                width: 2in !important;
+                height: 1in !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+            }
+            .sticker {
+              width: 2in;
+              height: 1in;
+              max-width: 2in;
+              max-height: 1in;
+              padding: 1.5mm 2.5mm;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              align-items: stretch;
+              text-align: center;
+              box-sizing: border-box;
+              overflow: hidden;
+              background: #ffffff;
+              color: #000000;
+            }
+            .brand {
+              font-size: 7.5px;
+              font-weight: 900;
+              text-transform: uppercase;
+              letter-spacing: 0.8px;
+              line-height: 1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .name {
+              font-size: 8.5px;
+              font-weight: 700;
+              line-height: 1.1;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              margin: 0.5px 0;
+            }
+            .barcode-box {
+              width: 100%;
+              height: 22px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+              margin: 0.5px 0;
+            }
+            .barcode-box svg {
+              width: 100%;
+              height: 100%;
+              display: block;
+            }
+            .barcode-num {
+              font-size: 7.5px;
+              font-weight: 700;
+              font-family: monospace;
+              letter-spacing: 1px;
+              line-height: 1;
+            }
+            .footer {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 8px;
+              font-weight: 700;
+              border-top: 0.8px solid #000000;
+              padding-top: 1.5px;
+              line-height: 1;
+            }
+            .code {
+              font-size: 7.5px;
+              color: #000000;
+            }
+            .price {
+              font-size: 8px;
+              font-weight: 900;
+              color: #000000;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="sticker">
+            <div class="brand">LUMEN OPTICALS</div>
+            <div class="name">${itemName}</div>
+            <div class="barcode-box">${barcodeSvgMarkup}</div>
+            <div class="barcode-num">*${barcodeText}*</div>
+            <div class="footer">
+              <span class="code">CODE: ${itemCode}</span>
+              <span class="price">LKR ${formattedPrice}</span>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+          } catch (e) {
+            console.error('Error during iframe printing:', e);
+          } finally {
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 2000);
+          }
+        }, 150);
+      }
+    } catch (err) {
+      console.error('Failed to print sticker via iframe:', err);
+    }
+  };
+
+  const getCategoryBadgeClass = (category: string) => {
+    const colors: Record<string, string> = {
+      frames: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      lenses: 'bg-blue-50 text-blue-700 border-blue-200',
+      services: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      accessories: 'bg-purple-50 text-purple-700 border-purple-200',
+      'contact-lens': 'bg-teal-50 text-teal-700 border-teal-200',
+    };
+    return colors[category.toLowerCase()] || 'bg-slate-100 text-slate-700 border-slate-200';
+  };
+
   return (
     <div className="space-y-3 p-1">
-      {/* Printable Area CSS */}
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden !important;
-          }
-          #barcode-sticker-printable, #barcode-sticker-printable * {
-            visibility: visible !important;
-          }
-          #barcode-sticker-printable {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            padding: 20px !important;
-          }
-        }
-      `}</style>
 
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
@@ -870,12 +1040,9 @@ export default function InventoryPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => {
-                              setSavedItemForPrint(item);
-                              setShowStickerPrintView(true);
-                            }}
-                            className="h-7 w-7 p-0 text-green-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-md"
-                            title="Print Barcode Sticker"
+                            onClick={() => handlePrintSticker(item)}
+                            className="h-7 w-7 p-0 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-md"
+                            title="Print Barcode Sticker (2x1 in)"
                           >
                             <Printer size={14} />
                           </Button>
@@ -1044,16 +1211,26 @@ export default function InventoryPage() {
               </p>
             </div>
 
-            {/* Mini Barcode Sticker Preview */}
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono space-y-1">
-              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">LUMEN OPTICALS</p>
-              <p className="text-xs font-bold truncate">{savedItemForPrint.name}</p>
-              <div className="py-1">
-                {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
-              </div>
-              <div className="flex justify-between items-center text-[10px] text-slate-600 pt-1 border-t border-slate-200">
-                <span>Code: {savedItemForPrint.code}</span>
-                <span className="font-bold text-slate-900">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+            {/* Mini Barcode Sticker Preview (2in x 1in proportional) */}
+            <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Sticker Label Preview (2" × 1")</p>
+              <div className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-300 rounded-xs text-center flex flex-col justify-between shadow-xs font-mono text-slate-900 overflow-hidden box-border">
+                <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
+                  LUMEN OPTICALS
+                </div>
+                <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
+                  {savedItemForPrint.name}
+                </div>
+                <div className="w-full flex items-center justify-center my-px overflow-hidden">
+                  {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
+                </div>
+                <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
+                  *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
+                </div>
+                <div className="flex items-center justify-between text-[8px] font-bold pt-[1.5px] border-t border-slate-200 leading-none">
+                  <span className="text-slate-700">CODE: {savedItemForPrint.code}</span>
+                  <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
@@ -1071,7 +1248,7 @@ export default function InventoryPage() {
               <Button
                 onClick={() => {
                   setShowPrintPromptModal(false);
-                  setShowStickerPrintView(true);
+                  handlePrintSticker(savedItemForPrint);
                 }}
                 className="h-8 text-xs bg-slate-900 hover:bg-slate-800 text-white font-medium flex-1 gap-1.5 shadow-sm"
               >
@@ -1094,7 +1271,7 @@ export default function InventoryPage() {
                 </div>
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">Print Barcode Sticker</h2>
-                  <p className="text-[11px] text-slate-400">Standard optical sticker label view</p>
+                  <p className="text-[11px] text-slate-400">Size: 2" × 1" (50.8mm × 25.4mm)</p>
                 </div>
               </div>
               <button
@@ -1108,27 +1285,31 @@ export default function InventoryPage() {
               </button>
             </div>
 
-            {/* Printable Sticker Box */}
-            <div className="flex justify-center my-4">
+            {/* Printable Sticker Box (2in x 1in standard optical label) */}
+            <div className="flex flex-col items-center justify-center my-3 p-4 bg-slate-100/70 rounded-xl border border-slate-200">
+              <div className="text-[11px] font-semibold text-slate-500 mb-2.5 flex items-center gap-1.5">
+                <span>Sticker Label Size: <strong className="text-slate-800">2" × 1" (50.8mm × 25.4mm)</strong></span>
+              </div>
               <div
                 id="barcode-sticker-printable"
-                className="w-[52mm] min-h-[28mm] p-2 bg-white border-2 border-dashed border-slate-300 rounded-md text-center flex flex-col justify-between shadow-xs font-mono text-slate-900"
+                className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-400 rounded-xs text-center flex flex-col justify-between shadow-sm font-mono text-slate-900 overflow-hidden box-border select-none"
+                style={{ width: '2in', height: '1in' }}
               >
-                <div className="text-[9px] font-extrabold tracking-widest text-slate-800 uppercase">
+                <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
                   LUMEN OPTICALS
                 </div>
-                <div className="text-[11px] font-bold text-slate-900 truncate my-0.5">
+                <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
                   {savedItemForPrint.name}
                 </div>
-                <div className="my-1">
+                <div className="w-full flex items-center justify-center my-px overflow-hidden">
                   {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
                 </div>
-                <div className="text-[10px] font-bold tracking-wider text-slate-800">
+                <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
                   *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
                 </div>
-                <div className="flex items-center justify-between text-[10px] font-bold pt-1 border-t border-slate-200 mt-0.5">
-                  <span className="text-slate-700">CODE: {savedItemForPrint.code}</span>
-                  <span className="text-slate-900 font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+                <div className="flex items-center justify-between text-[8px] font-bold pt-[1.5px] border-t border-black/80 leading-none">
+                  <span className="text-black">CODE: {savedItemForPrint.code}</span>
+                  <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -1147,7 +1328,7 @@ export default function InventoryPage() {
               </Button>
               <Button
                 size="sm"
-                onClick={() => window.print()}
+                onClick={() => savedItemForPrint && handlePrintSticker(savedItemForPrint)}
                 className="h-8 text-xs bg-slate-900 hover:bg-slate-800 text-white font-medium gap-1.5 shadow-sm px-4"
               >
                 <Printer size={14} />
@@ -1244,8 +1425,7 @@ export default function InventoryPage() {
                     size="sm"
                     onClick={() => {
                       setIsViewingItem(false);
-                      setSavedItemForPrint(viewingItem);
-                      setShowStickerPrintView(true);
+                      handlePrintSticker(viewingItem);
                     }}
                     className="bg-slate-900 hover:bg-slate-800 text-white text-xs h-7 px-3 gap-1"
                   >
