@@ -480,13 +480,20 @@ export default function InventoryPage() {
             @media print {
               @page {
                 size: 2in 1in portrait;
-                margin: 0mm !important;
+                margin: 0 0 0 10mm !important;
               }
               html, body {
                 width: 2in !important;
                 height: 1in !important;
-                margin: 0 !important;
+                margin: 0 0 0 5mm !important;
                 padding: 0 !important;
+                overflow: hidden !important;
+              }
+              .sticker {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: always !important;
+                break-after: page !important;
               }
             }
             .sticker {
@@ -504,6 +511,10 @@ export default function InventoryPage() {
               overflow: hidden;
               background: #ffffff;
               color: #000000;
+              page-break-inside: avoid;
+              break-inside: avoid;
+              page-break-after: always;
+              break-after: page;
             }
             .brand {
               font-size: 7.5px;
