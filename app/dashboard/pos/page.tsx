@@ -480,7 +480,7 @@ function POSContent() {
               Cart Items: <span className="text-indigo-600 font-bold">{totalItemCount}</span>
             </span>
             <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
-              Total: <span className="font-bold">LKR {total.toFixed(2)}</span>
+              Total: <span className="font-bold">LKR {Number(total).toLocaleString('en-Us', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </span>
           </div>
         </div>
@@ -621,13 +621,18 @@ function POSContent() {
                       onClick={() => !isOutOfStock && addToCart(product)}
                       className={`p-3 border ${catTheme.borderColor} ${catTheme.borderHover} hover:shadow-md transition-all cursor-pointer rounded-xl flex flex-col justify-between relative group overflow-hidden ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''
                         }`}
-                      style={{
-                        backgroundImage: `url(${catTheme.bgImage})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                      }}
                     >
+                      {/* Background Category Image */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-transform duration-500 ease-out group-hover:scale-105"
+                        style={{
+                          backgroundImage: `url(${catTheme.bgImage})`,
+                        }}
+                      />
+
+                      {/* Soft Glassmorphic Gradient Scrim */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/65 backdrop-blur-[1px] pointer-events-none group-hover:from-white/50 group-hover:via-white/20 group-hover:to-white/55 transition-all duration-300" />
+
                       {/* Card Content Top */}
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-1.5 gap-1">
@@ -657,7 +662,7 @@ function POSContent() {
                         <div>
                           <span className="text-[10px] text-slate-500 block font-medium leading-none">Price</span>
                           <span className="text-xs font-extrabold text-slate-900 font-mono">
-                            LKR {product.price.toFixed(2)}
+                            LKR {Number(product.price).toLocaleString('en-Us', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <Button
@@ -1015,7 +1020,7 @@ function POSContent() {
                 )}
                 <div className="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-slate-100">
                   <span>Total Payable:</span>
-                  <span className="text-emerald-700 font-mono text-base">LKR {total.toFixed(2)}</span>
+                  <span className="text-emerald-700 font-mono text-base">LKR {Number(total).toLocaleString('en-Us', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               </div>
 
