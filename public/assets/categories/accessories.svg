@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="accCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#faf5ff"/>
+      <stop offset="60%" stop-color="#f3e8ff"/>
+      <stop offset="100%" stop-color="#e9d5ff"/>
+    </linearGradient>
+    <linearGradient id="caseColor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7e22ce"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="bottleColor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Card Background Gradient -->
+  <rect width="320" height="200" fill="url(#accCardBg)" rx="16"/>
+
+  <g transform="translate(60, 40)" opacity="0.85">
+    <!-- Optical Hard Case -->
+    <rect x="10" y="55" width="145" height="65" rx="15" fill="url(#caseColor)" stroke="#581c87" stroke-width="3"/>
+    <path d="M 10,78 L 155,78" stroke="#581c87" stroke-width="2"/>
+    <circle cx="82" cy="78" r="5" fill="#f3e8ff" stroke="#581c87" stroke-width="2"/>
+
+    <!-- Folded Microfiber Cloth -->
+    <path d="M 18,38 L 80,14 L 115,48 L 52,72 Z" fill="#ffffff" stroke="#9333ea" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M 32,38 L 78,20 M 44,52 L 90,34" stroke="#c084fc" stroke-width="2"/>
+
+    <!-- Spray Bottle -->
+    <g transform="translate(175, 10)">
+      <rect x="12" y="10" width="20" height="15" rx="2" fill="#6b21a8"/>
+      <path d="M 32,15 L 44,10 L 44,21 Z" fill="#7e22ce"/>
+      <rect x="19" y="2" width="6" height="8" rx="1" fill="#581c87"/>
+      <rect x="6" y="25" width="32" height="80" rx="8" fill="url(#bottleColor)" stroke="#6b21a8" stroke-width="3"/>
+      <rect x="10" y="46" width="24" height="36" rx="3" fill="#ffffff" stroke="#7e22ce" stroke-width="1.5"/>
+      <circle cx="50" cy="11" r="2.5" fill="#9333ea"/>
+      <circle cx="58" cy="6" r="3" fill="#a855f7"/>
+      <circle cx="62" cy="17" r="2.5" fill="#a855f7"/>
+    </g>
+  </g>
+</svg>

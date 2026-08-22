@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="framesCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f3ff"/>
+      <stop offset="60%" stop-color="#ede9fe"/>
+      <stop offset="100%" stop-color="#ddd6fe"/>
+    </linearGradient>
+    <linearGradient id="lensGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#c7d2fe" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="rimColor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#312e81"/>
+      <stop offset="50%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Card Background Gradient -->
+  <rect width="320" height="200" fill="url(#framesCardBg)" rx="16"/>
+
+  <!-- Eyeglass Frame Artwork positioned across background -->
+  <g transform="translate(18, 55)" opacity="0.85">
+    <!-- Left Lens Interior -->
+    <path d="M 24,36 C 24,14 40,8 70,8 C 100,8 116,14 116,36 C 116,66 96,84 70,84 C 44,84 24,66 24,36 Z" fill="url(#lensGlass)"/>
+    <!-- Left Lens Rim -->
+    <path d="M 24,36 C 24,14 40,8 70,8 C 100,8 116,14 116,36 C 116,66 96,84 70,84 C 44,84 24,66 24,36 Z" stroke="url(#rimColor)" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    
+    <!-- Left Glint -->
+    <path d="M 40,24 L 60,14 M 50,44 L 84,14" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+
+    <!-- Bridge -->
+    <path d="M 116,28 C 126,20 152,20 162,28" stroke="url(#rimColor)" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M 120,36 C 128,29 150,29 158,36" stroke="url(#rimColor)" stroke-width="2.5" fill="none" opacity="0.7"/>
+
+    <!-- Right Lens Interior -->
+    <path d="M 162,36 C 162,14 178,8 208,8 C 238,8 254,14 254,36 C 254,66 234,84 208,84 C 182,84 162,66 162,36 Z" fill="url(#lensGlass)"/>
+    <!-- Right Lens Rim -->
+    <path d="M 162,36 C 162,14 178,8 208,8 C 238,8 254,14 254,36 C 254,66 234,84 208,84 C 182,84 162,66 162,36 Z" stroke="url(#rimColor)" stroke-width="5" fill="none" stroke-linejoin="round"/>
+
+    <!-- Right Glint -->
+    <path d="M 178,24 L 198,14 M 188,44 L 222,14" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+
+    <!-- Temple Arms -->
+    <path d="M 24,26 C 14,23 4,28 0,36" stroke="url(#rimColor)" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <circle cx="24" cy="26" r="4" fill="#312e81"/>
+    <path d="M 254,26 C 264,23 274,28 278,36" stroke="url(#rimColor)" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+    <circle cx="254" cy="26" r="4" fill="#312e81"/>
+
+    <!-- Nose pads -->
+    <path d="M 118,48 C 120,56 122,60 124,62" stroke="#4338ca" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 160,48 C 158,56 156,60 154,62" stroke="#4338ca" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

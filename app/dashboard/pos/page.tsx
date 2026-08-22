@@ -42,6 +42,71 @@ interface CartItem {
   discountValue?: number;
 }
 
+const getCategoryTheme = (category: string = '') => {
+  const cat = (category || '').toLowerCase().trim();
+  if (cat.includes('frame')) {
+    return {
+      bgImage: '/assets/categories/frames.svg',
+      badge: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      borderHover: 'hover:border-indigo-400 hover:shadow-indigo-500/10',
+      cardBg: 'bg-gradient-to-br from-indigo-50/80 via-white to-white',
+      borderColor: 'border-indigo-100',
+    };
+  }
+  if (cat.includes('lens')) {
+    return {
+      bgImage: '/assets/categories/lenses.svg',
+      badge: 'bg-sky-100 text-sky-800 border-sky-200',
+      borderHover: 'hover:border-sky-400 hover:shadow-sky-500/10',
+      cardBg: 'bg-gradient-to-br from-sky-50/80 via-white to-white',
+      borderColor: 'border-sky-100',
+    };
+  }
+  if (cat.includes('sunglass')) {
+    return {
+      bgImage: '/assets/categories/sunglasses.svg',
+      badge: 'bg-amber-100 text-amber-800 border-amber-200',
+      borderHover: 'hover:border-amber-400 hover:shadow-amber-500/10',
+      cardBg: 'bg-gradient-to-br from-amber-50/80 via-white to-white',
+      borderColor: 'border-amber-100',
+    };
+  }
+  if (cat.includes('contact') || cat.includes('solution')) {
+    return {
+      bgImage: '/assets/categories/contact-lens.svg',
+      badge: 'bg-teal-100 text-teal-800 border-teal-200',
+      borderHover: 'hover:border-teal-400 hover:shadow-teal-500/10',
+      cardBg: 'bg-gradient-to-br from-teal-50/80 via-white to-white',
+      borderColor: 'border-teal-100',
+    };
+  }
+  if (cat.includes('service') || cat.includes('exam') || cat.includes('consult')) {
+    return {
+      bgImage: '/assets/categories/services.svg',
+      badge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      borderHover: 'hover:border-emerald-400 hover:shadow-emerald-500/10',
+      cardBg: 'bg-gradient-to-br from-emerald-50/80 via-white to-white',
+      borderColor: 'border-emerald-100',
+    };
+  }
+  if (cat.includes('accessor') || cat.includes('case') || cat.includes('spray') || cat.includes('cloth')) {
+    return {
+      bgImage: '/assets/categories/accessories.svg',
+      badge: 'bg-purple-100 text-purple-800 border-purple-200',
+      borderHover: 'hover:border-purple-400 hover:shadow-purple-500/10',
+      cardBg: 'bg-gradient-to-br from-purple-50/80 via-white to-white',
+      borderColor: 'border-purple-100',
+    };
+  }
+  return {
+    bgImage: '/assets/categories/general.svg',
+    badge: 'bg-slate-100 text-slate-700 border-slate-200',
+    borderHover: 'hover:border-slate-400',
+    cardBg: 'bg-gradient-to-br from-slate-50/80 via-white to-white',
+    borderColor: 'border-slate-200',
+  };
+};
+
 function POSContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -548,27 +613,30 @@ function POSContent() {
                   const itemInCart = cartItems.find((item) => item.id === product.id);
                   const isNonInventory = product.type === 'non-inventory';
                   const isOutOfStock = !isNonInventory && product.stock <= 0;
+                  const catTheme = getCategoryTheme(product.category);
 
                   return (
                     <Card
                       key={product.id}
                       onClick={() => !isOutOfStock && addToCart(product)}
-                      className={`p-3 bg-white border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all cursor-pointer rounded-xl flex flex-col justify-between relative group ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''
+                      className={`p-3 border ${catTheme.borderColor} ${catTheme.borderHover} hover:shadow-md transition-all cursor-pointer rounded-xl flex flex-col justify-between relative group overflow-hidden ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-slate-50' : ''
                         }`}
+                      style={{
+                        backgroundImage: `url(${catTheme.bgImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat',
+                      }}
                     >
-                      {itemInCart && (
-                        <span className="absolute top-2 right-2 bg-slate-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-xs">
-                          {itemInCart.quantity}
-                        </span>
-                      )}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">
+                      {/* Card Content Top */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-1.5 gap-1">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border uppercase tracking-wider truncate shadow-2xs ${catTheme.badge}`}>
                             {product.category}
                           </span>
                           {!isNonInventory && (
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isOutOfStock
+                              className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${isOutOfStock
                                 ? 'bg-red-100 text-red-700'
                                 : product.stock <= 5
                                   ? 'bg-amber-100 text-amber-800'
@@ -579,15 +647,16 @@ function POSContent() {
                             </span>
                           )}
                         </div>
-                        <h4 className="font-semibold text-xs text-slate-900 line-clamp-2 min-h-[32px] group-hover:text-indigo-600 transition-colors">
+                        <h4 className="font-bold text-xs text-slate-900 line-clamp-2 min-h-[12px] group-hover:text-indigo-600 transition-colors pr-4">
                           {product.name}
                         </h4>
                       </div>
 
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                      {/* Card Content Bottom */}
+                      <div className="relative z-10 mt-2.5 pt-2 border-t border-slate-900/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-slate-400 block font-medium">Price</span>
-                          <span className="text-xs font-bold text-slate-900 font-mono">
+                          <span className="text-[10px] text-slate-500 block font-medium leading-none">Price</span>
+                          <span className="text-xs font-extrabold text-slate-900 font-mono">
                             LKR {product.price.toFixed(2)}
                           </span>
                         </div>
@@ -598,12 +667,18 @@ function POSContent() {
                             e.stopPropagation();
                             addToCart(product);
                           }}
-                          className="h-7 px-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg gap-1 shadow-2xs"
+                          className="h-7 px-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg gap-1 shadow-2xs group-hover:bg-indigo-600 transition-colors"
                         >
                           <Plus size={13} />
                           Add
                         </Button>
                       </div>
+
+                      {itemInCart && (
+                        <span className="absolute top-2 right-2 bg-slate-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-xs z-20">
+                          {itemInCart.quantity}
+                        </span>
+                      )}
                     </Card>
                   );
                 })}

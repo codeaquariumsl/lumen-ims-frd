@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="clCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdfa"/>
+      <stop offset="60%" stop-color="#ccfbf1"/>
+      <stop offset="100%" stop-color="#99f6e4"/>
+    </linearGradient>
+    <radialGradient id="hydrogelVibrant" cx="45%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#5eead4" stop-opacity="0.6"/>
+      <stop offset="80%" stop-color="#14b8a6" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#0f766e" stop-opacity="0.8"/>
+    </radialGradient>
+    <linearGradient id="caseCapVibrant" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Card Background Gradient -->
+  <rect width="320" height="200" fill="url(#clCardBg)" rx="16"/>
+
+  <g transform="translate(180, 80)" opacity="0.85">
+    <!-- Case Base -->
+    <rect x="-65" y="10" width="150" height="50" rx="25" fill="url(#caseCapVibrant)" stroke="#115e59" stroke-width="3"/>
+    <!-- Left Chamber 'L' -->
+    <circle cx="-35" cy="35" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="2.5"/>
+    <text x="-35" y="42" font-family="system-ui, sans-serif" font-size="17" font-weight="900" fill="#0f766e" text-anchor="middle">L</text>
+    <!-- Right Chamber 'R' -->
+    <circle cx="55" cy="35" r="20" fill="#ffffff" stroke="#0f766e" stroke-width="2.5"/>
+    <text x="55" y="42" font-family="system-ui, sans-serif" font-size="17" font-weight="900" fill="#0f766e" text-anchor="middle">R</text>
+
+    <!-- Floating Curved Hydrogel Lens Profile -->
+    <g transform="translate(10, -32)">
+      <path d="M -34,-4 C -28,30 28,30 34,-4 C 24,22 -24,22 -34,-4 Z" fill="url(#hydrogelVibrant)" stroke="#0f766e" stroke-width="3"/>
+      <path d="M -20,4 C -12,16 12,16 20,4" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9"/>
+      <circle cx="-14" cy="-8" r="4" fill="#2dd4bf" stroke="#0f766e" stroke-width="1"/>
+      <circle cx="18" cy="-6" r="3" fill="#2dd4bf" stroke="#0f766e" stroke-width="1"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="genCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="60%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Card Background Gradient -->
+  <rect width="320" height="200" fill="url(#genCardBg)" rx="16"/>
+
+  <g transform="translate(180, 100)" opacity="0.85">
+    <!-- Box Isometric -->
+    <path d="M 0,-48 L 65,-16 L 0,16 L -65,-16 Z" fill="#ffffff" stroke="#334155" stroke-width="2.5"/>
+    <path d="M -65,-16 L 0,16 L 0,68 L -65,36 Z" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>
+    <path d="M 65,-16 L 0,16 L 0,68 L 65,36 Z" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>
+
+    <!-- Glasses Icon on Box -->
+    <circle cx="-28" cy="24" r="9" stroke="#1e293b" stroke-width="2" fill="none"/>
+    <circle cx="-6" cy="33" r="9" stroke="#1e293b" stroke-width="2" fill="none"/>
+    <path d="M -19,27 C -17,26 -17,31 -15,30" stroke="#1e293b" stroke-width="2"/>
+
+    <!-- Barcode -->
+    <line x1="16" y1="20" x2="16" y2="36" stroke="#1e293b" stroke-width="2"/>
+    <line x1="22" y1="22" x2="22" y2="38" stroke="#1e293b" stroke-width="3"/>
+    <line x1="28" y1="24" x2="28" y2="40" stroke="#1e293b" stroke-width="1.5"/>
+    <line x1="34" y1="26" x2="34" y2="42" stroke="#1e293b" stroke-width="3"/>
+    <line x1="40" y1="28" x2="40" y2="44" stroke="#1e293b" stroke-width="2"/>
+  </g>
+</svg>

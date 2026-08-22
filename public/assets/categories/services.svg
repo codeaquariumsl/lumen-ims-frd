@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" fill="none" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="srvCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="60%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full Card Background Gradient -->
+  <rect width="320" height="200" fill="url(#srvCardBg)" rx="16"/>
+
+  <g transform="translate(45, 30)" opacity="0.85">
+    <!-- Eye Chart -->
+    <rect x="15" y="10" width="90" height="125" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2.5"/>
+    <text x="60" y="44" font-family="system-ui, sans-serif" font-size="30" font-weight="900" fill="#065f46" text-anchor="middle">E</text>
+    <text x="45" y="68" font-family="system-ui, sans-serif" font-size="17" font-weight="900" fill="#047857" text-anchor="middle">F</text>
+    <text x="75" y="68" font-family="system-ui, sans-serif" font-size="17" font-weight="900" fill="#047857" text-anchor="middle">P</text>
+    <text x="35" y="88" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#059669" text-anchor="middle">T</text>
+    <text x="60" y="88" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#059669" text-anchor="middle">O</text>
+    <text x="85" y="88" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#059669" text-anchor="middle">Z</text>
+    <rect x="22" y="104" width="36" height="5" rx="2" fill="#ef4444"/>
+    <rect x="64" y="104" width="36" height="5" rx="2" fill="#10b981"/>
+
+    <!-- Optometrist Trial Lens Dial -->
+    <g transform="translate(180, 70)">
+      <circle cx="0" cy="0" r="50" fill="#ffffff" stroke="#047857" stroke-width="4"/>
+      <line x1="-50" y1="0" x2="-38" y2="0" stroke="#047857" stroke-width="3"/>
+      <line x1="38" y1="0" x2="50" y2="0" stroke="#047857" stroke-width="3"/>
+      <line x1="0" y1="-50" x2="0" y2="-38" stroke="#047857" stroke-width="3"/>
+      <line x1="0" y1="38" x2="0" y2="50" stroke="#047857" stroke-width="3"/>
+      <circle cx="0" cy="0" r="35" fill="#a7f3d0" stroke="#059669" stroke-width="2"/>
+      <circle cx="0" cy="0" r="12" stroke="#047857" stroke-width="2" fill="none"/>
+      <line x1="-35" y1="0" x2="35" y2="0" stroke="#047857" stroke-width="1.5"/>
+      <line x1="0" y1="-35" x2="0" y2="35" stroke="#047857" stroke-width="1.5"/>
+      <rect x="46" y="-7" width="24" height="14" rx="3" fill="#047857"/>
+      <text x="58" y="3.5" font-family="system-ui, sans-serif" font-size="9" font-weight="900" fill="#ffffff" text-anchor="middle">+1.5</text>
+    </g>
+  </g>
+</svg>
