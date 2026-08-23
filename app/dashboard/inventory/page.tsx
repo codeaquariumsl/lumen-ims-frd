@@ -566,12 +566,12 @@ export default function InventoryPage() {
             @media print {
               @page {
                 size: 2in 1in portrait;
-                margin: 0 0 0 10mm !important;
+                margin: 0 0 8mm 10mm !important;
               }
               html, body {
                 width: 2in !important;
                 height: 1in !important;
-                margin: 0 0 0 5mm !important;
+                margin: 0 0 8mm 5mm !important;
                 padding: 0 !important;
                 overflow: hidden !important;
               }
@@ -607,7 +607,6 @@ export default function InventoryPage() {
               flex-direction: column;
               justify-content: flex-start;
               width: 100%;
-              margin-top: 8px;
             }
             .brand {
               font-size: 7.5px;
@@ -1436,7 +1435,7 @@ export default function InventoryPage() {
               <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Sticker Label Preview (2" × 1")</p>
               <div className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-300 rounded-xs text-center flex flex-col justify-between shadow-xs font-mono text-slate-900 overflow-hidden box-border">
                 {/* Item Details (Above Middle Fold/Gap) */}
-                <div className="flex flex-col justify-start mt-[8px]">
+                <div className="flex flex-col justify-start">
                   <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
                     LUMEN OPTICALS
                   </div>
@@ -1523,7 +1522,7 @@ export default function InventoryPage() {
                 style={{ width: '2in', height: '1in' }}
               >
                 {/* Item Details (Above Middle Fold/Gap) */}
-                <div className="flex flex-col justify-start mt-[8px]">
+                <div className="flex flex-col justify-start">
                   <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
                     LUMEN OPTICALS
                   </div>
