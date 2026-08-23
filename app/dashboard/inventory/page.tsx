@@ -607,6 +607,7 @@ export default function InventoryPage() {
               flex-direction: column;
               justify-content: flex-start;
               width: 100%;
+              margin-top: 8px;
             }
             .brand {
               font-size: 7.5px;
@@ -1262,11 +1263,10 @@ export default function InventoryPage() {
                   size="sm"
                   onClick={() => setCurrentPage(page)}
                   disabled={isLoading}
-                  className={`h-7 min-w-[28px] px-1.5 text-xs font-semibold ${
-                    currentPage === page
-                      ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-xs'
-                      : 'border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  className={`h-7 min-w-[28px] px-1.5 text-xs font-semibold ${currentPage === page
+                    ? 'bg-slate-900 hover:bg-slate-800 text-white border-slate-900 shadow-xs'
+                    : 'border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
                 >
                   {page}
                 </Button>
@@ -1436,7 +1436,7 @@ export default function InventoryPage() {
               <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Sticker Label Preview (2" × 1")</p>
               <div className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-300 rounded-xs text-center flex flex-col justify-between shadow-xs font-mono text-slate-900 overflow-hidden box-border">
                 {/* Item Details (Above Middle Fold/Gap) */}
-                <div className="flex flex-col justify-start">
+                <div className="flex flex-col justify-start mt-[8px]">
                   <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
                     LUMEN OPTICALS
                   </div>
@@ -1523,7 +1523,7 @@ export default function InventoryPage() {
                 style={{ width: '2in', height: '1in' }}
               >
                 {/* Item Details (Above Middle Fold/Gap) */}
-                <div className="flex flex-col justify-start">
+                <div className="flex flex-col justify-start mt-[8px]">
                   <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
                     LUMEN OPTICALS
                   </div>
