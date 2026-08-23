@@ -602,6 +602,12 @@ export default function InventoryPage() {
               page-break-after: always;
               break-after: page;
             }
+            .top-section {
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
+              width: 100%;
+            }
             .brand {
               font-size: 7.5px;
               font-weight: 900;
@@ -620,6 +626,30 @@ export default function InventoryPage() {
               overflow: hidden;
               text-overflow: ellipsis;
               margin: 0.5px 0;
+            }
+            .details-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 8px;
+              font-weight: 700;
+              padding-top: 1px;
+              line-height: 1;
+            }
+            .code {
+              font-size: 7.5px;
+              color: #000000;
+            }
+            .price {
+              font-size: 8px;
+              font-weight: 900;
+              color: #000000;
+            }
+            .bottom-section {
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              width: 100%;
             }
             .barcode-box {
               width: 100%;
@@ -642,36 +672,21 @@ export default function InventoryPage() {
               letter-spacing: 1px;
               line-height: 1;
             }
-            .footer {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              font-size: 8px;
-              font-weight: 700;
-              border-top: 0.8px solid #000000;
-              padding-top: 1.5px;
-              line-height: 1;
-            }
-            .code {
-              font-size: 7.5px;
-              color: #000000;
-            }
-            .price {
-              font-size: 8px;
-              font-weight: 900;
-              color: #000000;
-            }
           </style>
         </head>
         <body>
           <div class="sticker">
-            <div class="brand">LUMEN OPTICALS</div>
-            <div class="name">${itemName}</div>
-            <div class="barcode-box">${barcodeSvgMarkup}</div>
-            <div class="barcode-num">*${barcodeText}*</div>
-            <div class="footer">
-              <span class="code">CODE: ${itemCode}</span>
-              <span class="price">LKR ${formattedPrice}</span>
+            <div class="top-section">
+              <div class="brand">LUMEN OPTICALS</div>
+              <div class="name">${itemName}</div>
+              <div class="details-row">
+                <span class="code">CODE: ${itemCode}</span>
+                <span class="price">LKR ${formattedPrice}</span>
+              </div>
+            </div>
+            <div class="bottom-section">
+              <div class="barcode-box">${barcodeSvgMarkup}</div>
+              <div class="barcode-num">*${barcodeText}*</div>
             </div>
           </div>
         </body>
@@ -1420,21 +1435,28 @@ export default function InventoryPage() {
             <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-lg">
               <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">Sticker Label Preview (2" × 1")</p>
               <div className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-300 rounded-xs text-center flex flex-col justify-between shadow-xs font-mono text-slate-900 overflow-hidden box-border">
-                <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
-                  LUMEN OPTICALS
+                {/* Item Details (Above Middle Fold/Gap) */}
+                <div className="flex flex-col justify-start">
+                  <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
+                    LUMEN OPTICALS
+                  </div>
+                  <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
+                    {savedItemForPrint.name}
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-bold pt-[1px] leading-none">
+                    <span className="text-slate-700">CODE: {savedItemForPrint.code}</span>
+                    <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+                  </div>
                 </div>
-                <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
-                  {savedItemForPrint.name}
-                </div>
-                <div className="w-full flex items-center justify-center my-px overflow-hidden">
-                  {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
-                </div>
-                <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
-                  *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
-                </div>
-                <div className="flex items-center justify-between text-[8px] font-bold pt-[1.5px] border-t border-slate-200 leading-none">
-                  <span className="text-slate-700">CODE: {savedItemForPrint.code}</span>
-                  <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+
+                {/* Barcode (Below Middle Fold/Gap) */}
+                <div className="flex flex-col justify-end">
+                  <div className="w-full flex items-center justify-center my-px overflow-hidden">
+                    {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
+                  </div>
+                  <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
+                    *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
+                  </div>
                 </div>
               </div>
             </div>
@@ -1500,21 +1522,28 @@ export default function InventoryPage() {
                 className="w-[2in] h-[1in] p-[1.5mm] bg-white border border-dashed border-slate-400 rounded-xs text-center flex flex-col justify-between shadow-sm font-mono text-slate-900 overflow-hidden box-border select-none"
                 style={{ width: '2in', height: '1in' }}
               >
-                <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
-                  LUMEN OPTICALS
+                {/* Item Details (Above Middle Fold/Gap) */}
+                <div className="flex flex-col justify-start">
+                  <div className="text-[7.5px] font-black tracking-widest text-black uppercase leading-tight truncate">
+                    LUMEN OPTICALS
+                  </div>
+                  <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
+                    {savedItemForPrint.name}
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-bold pt-[1px] leading-none">
+                    <span className="text-black">CODE: {savedItemForPrint.code}</span>
+                    <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+                  </div>
                 </div>
-                <div className="text-[8.5px] font-bold text-black truncate leading-tight my-px">
-                  {savedItemForPrint.name}
-                </div>
-                <div className="w-full flex items-center justify-center my-px overflow-hidden">
-                  {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
-                </div>
-                <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
-                  *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
-                </div>
-                <div className="flex items-center justify-between text-[8px] font-bold pt-[1.5px] border-t border-black/80 leading-none">
-                  <span className="text-black">CODE: {savedItemForPrint.code}</span>
-                  <span className="text-black font-extrabold">LKR {savedItemForPrint.sellingPrice.toLocaleString()}</span>
+
+                {/* Barcode (Below Middle Fold/Gap) */}
+                <div className="flex flex-col justify-end">
+                  <div className="w-full flex items-center justify-center my-px overflow-hidden">
+                    {renderBarcodeSvg(savedItemForPrint.barcode || `01${savedItemForPrint.code}`)}
+                  </div>
+                  <div className="text-[7.5px] font-bold tracking-wider text-black leading-none font-mono">
+                    *{savedItemForPrint.barcode || `01${savedItemForPrint.code}`}*
+                  </div>
                 </div>
               </div>
             </div>
