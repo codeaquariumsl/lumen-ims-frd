@@ -229,7 +229,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
 
   // Line 3: Customer
   currentY += 4.5;
-  safeText(`Customer          - ${custIdStr} - ${custNameStr}`, marginX, currentY);
+  safeText(`Customer          - ${custNameStr}`, marginX, currentY);
 
   // Line 4: Delivery
   currentY += 4.5;
@@ -660,7 +660,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.line(marginX, footerY, pageWidth - marginX, footerY);
 
   // Left Footer Metadata
-  const clinicianStr = prescription.clinicianName || 'EKANAYAKA A G S S';
+  const clinicianStr = prescription.clinicianName || (prescription as any).clinician_name || (prescription as any).optometrist_name || (prescription as any).staff_name || '';
   const printedDateStr = prescription.printedOn || `${orderDateStr}   ${orderTimeStr}`;
 
   doc.setFont('helvetica', 'normal');

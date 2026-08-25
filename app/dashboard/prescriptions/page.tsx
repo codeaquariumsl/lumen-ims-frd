@@ -23,6 +23,11 @@ interface Prescription {
   prescriptionNumber?: string;
   customerName: string;
   customerId?: string;
+  staffId?: string;
+  staff_id?: string;
+  clinicianName?: string;
+  optometrist_name?: string;
+  staff_name?: string;
   age?: number;
   prescriptionDate: string;
   expiryDate: string;
@@ -198,6 +203,11 @@ export default function PrescriptionsPage() {
           prescriptionNumber: p.prescription_number || p.prescriptionNumber || String(p.id),
           customerName: `${p.first_name} ${p.last_name || ''}`.trim(),
           customerId: String(p.customer_id),
+          staffId: p.staff_id ? String(p.staff_id) : (p.optometrist_id ? String(p.optometrist_id) : undefined),
+          staff_id: p.staff_id ? String(p.staff_id) : (p.optometrist_id ? String(p.optometrist_id) : undefined),
+          clinicianName: p.clinician_name || p.optometrist_name || p.staff_name || '',
+          optometrist_name: p.optometrist_name || p.clinician_name || '',
+          staff_name: p.staff_name || p.clinician_name || '',
           age: p.date_of_birth ? calculateAge(p.date_of_birth) : undefined,
           prescriptionDate: p.prescription_date ? p.prescription_date.split('T')[0] : '',
           expiryDate: p.expiry_date ? p.expiry_date.split('T')[0] : '',
@@ -319,6 +329,8 @@ export default function PrescriptionsPage() {
     try {
       const payload = {
         customerId: formData.customerId,
+        staffId: user?.id,
+        optometristId: user?.id,
         prescriptionDate: formData.prescriptionDate,
         prescriptionType: formData.prescriptionType,
 
@@ -1549,7 +1561,10 @@ export default function PrescriptionsPage() {
               {/* Actions Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                 <Button
-                  onClick={() => generatePrescriptionPDF(viewingPrescription, user?.companyDetails)}
+                  onClick={() => generatePrescriptionPDF({
+                    ...viewingPrescription,
+                    clinicianName: viewingPrescription.clinicianName || viewingPrescription.optometrist_name || viewingPrescription.staff_name || user?.name || ''
+                  }, user?.companyDetails)}
                   className="bg-slate-900 hover:bg-slate-800 text-white gap-2 font-medium text-xs h-9 px-4"
                 >
                   <Printer size={15} />

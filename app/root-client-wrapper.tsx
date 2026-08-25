@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthProvider } from '@/lib/auth/auth-context';
+import { Toaster } from 'sonner';
 
 export function RootClientWrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -15,5 +16,11 @@ export function RootClientWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      {children}
+      <Toaster richColors position="top-right" closeButton />
+    </AuthProvider>
+  );
 }
+

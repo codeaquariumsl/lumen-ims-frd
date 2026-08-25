@@ -142,8 +142,8 @@ function getCustomerName(data: SalePdfData): string {
 
 function getCustomerCode(data: SalePdfData): string {
   if (data.customer_code) return data.customer_code;
-  if (data.customer_id) return String(data.customer_id).padStart(11, '0');
-  return '06900000861';
+  if (data.customer_id) return String(data.customer_id).padStart(5, '0');
+  return '00001';
 }
 
 /**
@@ -341,7 +341,7 @@ export function drawInvoicePage(doc: jsPDF, data: SalePdfData, companyDetails?: 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
 
-  const staffStr = data.staff_name || data.cashier_name || 'EKANAYAKA A G S S';
+  const staffStr = data.staff_name || data.cashier_name || '';
   const printTimeStr = `${saleDateStr}   ${saleTimeStr}`;
 
   let fY = footerY + 4.5;
@@ -410,9 +410,9 @@ export function drawReceiptPage(doc: jsPDF, data: SalePdfData, companyDetails?: 
   doc.setFontSize(13);
   safeText(doc, 'INVOICE', pageWidth / 2, currentY, { align: 'center' });
 
-  currentY += 4.5;
-  doc.setFontSize(8.5);
-  safeText(doc, 'RE-PRINT - FOUR', pageWidth / 2, currentY, { align: 'center' });
+  // currentY += 4.5;
+  // doc.setFontSize(8.5);
+  // safeText(doc, 'RE-PRINT - FOUR', pageWidth / 2, currentY, { align: 'center' });
 
   // Info Block (2 Columns)
   currentY += 6;
