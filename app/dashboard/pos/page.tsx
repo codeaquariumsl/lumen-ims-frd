@@ -145,8 +145,7 @@ function POSContent() {
     try {
       const response = await apiClient.get('/products', {
         params: {
-          search: searchTerm,
-          limit: 100
+          search: searchTerm
         }
       });
       if (response.data?.success) {
