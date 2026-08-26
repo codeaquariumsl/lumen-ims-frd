@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, Eye, Printer, X, Receipt, Building, CheckCircle2, Clock, AlertCircle, Eye as EyeIcon, DollarSign, FileText } from 'lucide-react';
+import { Search, Calendar, Eye, Printer, X, Receipt, Building, CheckCircle2, Clock, AlertCircle, Eye as EyeIcon, DollarSign, FileText, CreditCard, Banknote, QrCode } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { printSalePDF } from '@/lib/pdf/sales-pdf';
+import { toast } from 'sonner';
 
 interface InvoiceItem {
   id: number;
@@ -92,6 +93,14 @@ export default function InvoicesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
+  // Collect Payment Modal State
+  const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+  const [collectingInvoice, setCollectingInvoice] = useState<Invoice | null>(null);
+  const [collectAmount, setCollectAmount] = useState<string>('');
+  const [collectPaymentMethod, setCollectPaymentMethod] = useState<string>('cash');
+  const [collectNotes, setCollectNotes] = useState<string>('');
+  const [isCollecting, setIsCollecting] = useState<boolean>(false);
+
   // Fetch branches for admin role
   useEffect(() => {
     if (user?.role === 'admin') {
@@ -163,6 +172,58 @@ export default function InvoicesPage() {
   const handlePrint = (options?: { invoiceOnly?: boolean; receiptOnly?: boolean }) => {
     if (selectedInvoice) {
       printSalePDF(selectedInvoice, options, user?.companyDetails);
+    }
+  };
+
+  // Open payment collection modal
+  const openCollectPaymentModal = (invoice: Invoice) => {
+    setCollectingInvoice(invoice);
+    const bal = parseFloat(invoice.balance_amount || '0');
+    setCollectAmount(bal > 0 ? bal.toFixed(2) : parseFloat(invoice.net_amount || '0').toFixed(2));
+    setCollectPaymentMethod('cash');
+    setCollectNotes('');
+    setIsCollectModalOpen(true);
+  };
+
+  // Submit payment collection
+  const handleConfirmCollectPayment = async () => {
+    if (!collectingInvoice) return;
+    const amountNum = parseFloat(collectAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Please enter a valid payment amount greater than 0.');
+      return;
+    }
+
+    const currentBal = parseFloat(collectingInvoice.balance_amount || '0');
+    if (currentBal > 0 && amountNum > currentBal + 0.01) {
+      toast.error(`Payment amount cannot exceed the balance due of LKR ${currentBal.toFixed(2)}.`);
+      return;
+    }
+
+    try {
+      setIsCollecting(true);
+      const response = await apiClient.post(`/sales/${collectingInvoice.id}/collect-payment`, {
+        amount: amountNum,
+        paymentMethod: collectPaymentMethod,
+        notes: collectNotes.trim() || undefined
+      });
+
+      if (response.data?.success) {
+        toast.success(`Payment of LKR ${amountNum.toLocaleString(undefined, { minimumFractionDigits: 2 })} recorded successfully!`);
+        setIsCollectModalOpen(false);
+        const updatedInvoice = response.data.data;
+        if (selectedInvoice && selectedInvoice.id === collectingInvoice.id) {
+          setSelectedInvoice(updatedInvoice);
+        }
+        fetchInvoices();
+      } else {
+        toast.error(response.data?.message || 'Failed to record payment.');
+      }
+    } catch (error: any) {
+      console.error('Error recording payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to collect payment.');
+    } finally {
+      setIsCollecting(false);
     }
   };
 
@@ -381,18 +442,36 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* Collect Payment Action for orders with balance / partial status */}
+                          {(invoice.payment_status === 'partial' ||
+                            invoice.payment_status === 'advance' ||
+                            invoice.payment_status === 'pending' ||
+                            invoice.payment_status === 'unpaid' ||
+                            parseFloat(invoice.balance_amount || '0') > 0) && (
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1 h-8 px-2 text-xs font-semibold shadow-2xs cursor-pointer"
+                              onClick={() => openCollectPaymentModal(invoice)}
+                              title="Collect Outstanding Balance"
+                            >
+                              <DollarSign size={13} />
+                              <span className="hidden xl:inline">Collect</span>
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg gap-1.5 h-8 px-2.5 text-xs"
+                            className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg gap-1.5 h-8 px-2.5 text-xs cursor-pointer"
                             onClick={() => handleViewDetails(invoice)}
+                            title="View Invoice Details"
                           >
                             <Eye size={14} />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg gap-1.5 h-8 px-2.5 text-xs"
+                            className="border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg gap-1.5 h-8 px-2.5 text-xs cursor-pointer"
                             onClick={() => handleViewDetails(invoice).then((fullInv) => printSalePDF(fullInv || invoice, undefined, user?.companyDetails))}
+                            title="Print Invoice / Receipt"
                           >
                             <Printer size={14} />
                           </Button>
@@ -669,43 +748,252 @@ export default function InvoicesPage() {
             </div>
 
             {/* Modal Actions */}
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+              <div>
+                {(parseFloat(selectedInvoice.balance_amount || '0') > 0 || selectedInvoice.payment_status !== 'completed') && (
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8 text-xs gap-1.5 font-semibold shadow-2xs cursor-pointer"
+                    onClick={() => openCollectPaymentModal(selectedInvoice)}
+                  >
+                    <DollarSign size={14} />
+                    Collect Balance (LKR.{parseFloat(selectedInvoice.balance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })})
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs"
+                  onClick={() => setIsDetailOpen(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
+                  onClick={() => handlePrint({ invoiceOnly: true })}
+                  disabled={isDetailLoading}
+                >
+                  <FileText size={14} />
+                  Print Invoice
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
+                  onClick={() => handlePrint({ receiptOnly: true })}
+                  disabled={isDetailLoading}
+                >
+                  <Receipt size={14} />
+                  Print Receipt
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handlePrint()}
+                  disabled={isDetailLoading}
+                  className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg h-8 text-xs gap-1.5 shadow-sm"
+                >
+                  <Printer size={15} />
+                  Print Both
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 3. Collect Payment Modal Dialog */}
+      {isCollectModalOpen && collectingInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 print:hidden">
+          <Card className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="px-5 py-3.5 bg-slate-900 text-white flex justify-between items-center border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/30">
+                  <DollarSign size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">Collect Payment</h3>
+                  <p className="text-[11px] text-slate-400">Invoice #{collectingInvoice.invoice_number}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCollectModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 text-xs">
+              {/* Customer & Invoice Summary Card */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="text-slate-500 text-[11px]">Customer:</span>
+                  <span className="font-semibold text-slate-900">
+                    {collectingInvoice.first_name ? `${collectingInvoice.first_name} ${collectingInvoice.last_name || ''}` : 'Walk-in Customer'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="text-slate-500 text-[11px]">Grand Total:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    LKR.{parseFloat(collectingInvoice.net_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-emerald-700">
+                  <span className="text-slate-500 text-[11px]">Already Paid:</span>
+                  <span className="font-mono font-semibold">
+                    LKR.{parseFloat(collectingInvoice.advance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-red-700">
+                  <span className="font-bold uppercase tracking-wider text-[11px]">Outstanding Balance:</span>
+                  <span className="font-mono font-bold text-sm">
+                    LKR.{parseFloat(collectingInvoice.balance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Amount Input */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Payment Amount to Collect (LKR) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCollectAmount(parseFloat(collectingInvoice.balance_amount || '0').toFixed(2))}
+                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                  >
+                    Pay Full Balance
+                  </button>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-xs">
+                    LKR
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max={parseFloat(collectingInvoice.balance_amount || '0')}
+                    value={collectAmount}
+                    onChange={(e) => setCollectAmount(e.target.value)}
+                    className="pl-12 font-mono font-bold text-sm h-10 border-slate-300 rounded-xl"
+                    placeholder="0.00"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Payment Method *
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { id: 'cash', label: 'Cash', icon: Banknote },
+                    { id: 'card', label: 'Card', icon: CreditCard },
+                    { id: 'upi', label: 'UPI / QR', icon: QrCode },
+                    { id: 'cheque', label: 'Cheque', icon: FileText }
+                  ].map((pm) => {
+                    const IconComp = pm.icon;
+                    return (
+                      <button
+                        key={pm.id}
+                        type="button"
+                        onClick={() => setCollectPaymentMethod(pm.id)}
+                        className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
+                          collectPaymentMethod === pm.id
+                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                        }`}
+                      >
+                        <IconComp size={15} />
+                        <span>{pm.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Cashier Notes Input */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider block">
+                  Remarks / Receipt Note <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Balance collected on delivery..."
+                  value={collectNotes}
+                  onChange={(e) => setCollectNotes(e.target.value)}
+                  className="text-xs h-8 rounded-lg border-slate-300"
+                />
+              </div>
+
+              {/* Balance preview after this payment */}
+              {(() => {
+                const payNum = parseFloat(collectAmount || '0');
+                const curBal = parseFloat(collectingInvoice.balance_amount || '0');
+                const newBal = Math.max(0, curBal - (isNaN(payNum) ? 0 : payNum));
+                const willComplete = newBal <= 0;
+
+                return (
+                  <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
+                    willComplete
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : 'bg-amber-50 border-amber-200 text-amber-900'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      {willComplete ? <CheckCircle2 size={15} className="text-emerald-600" /> : <Clock size={15} className="text-amber-600" />}
+                      <span className="font-semibold">
+                        {willComplete ? 'Invoice will be fully settled' : 'Remaining balance after payment:'}
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold">
+                      {willComplete ? 'COMPLETED' : `LKR.${newBal.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer Actions */}
             <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 shrink-0">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
-                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs"
-                onClick={() => setIsDetailOpen(false)}
+                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs cursor-pointer"
+                onClick={() => setIsCollectModalOpen(false)}
+                disabled={isCollecting}
               >
-                Close
+                Cancel
               </Button>
               <Button
-                variant="outline"
+                type="button"
                 size="sm"
-                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
-                onClick={() => handlePrint({ invoiceOnly: true })}
-                disabled={isDetailLoading}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+                onClick={handleConfirmCollectPayment}
+                disabled={isCollecting || !collectAmount || parseFloat(collectAmount) <= 0}
               >
-                <FileText size={14} />
-                Print Invoice
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg h-8 text-xs gap-1.5"
-                onClick={() => handlePrint({ receiptOnly: true })}
-                disabled={isDetailLoading}
-              >
-                <Receipt size={14} />
-                Print Receipt
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handlePrint()}
-                disabled={isDetailLoading}
-                className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg h-8 text-xs gap-1.5 shadow-sm"
-              >
-                <Printer size={15} />
-                Print Both
+                {isCollecting ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Recording...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={14} />
+                    Confirm & Record Payment
+                  </>
+                )}
               </Button>
             </div>
           </Card>
