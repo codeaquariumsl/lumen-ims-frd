@@ -436,14 +436,24 @@ export default function PrescriptionsPage() {
   };
 
   const handleDeletePrescription = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this prescription?')) {
+    if (window.confirm('Are you sure you want to delete this prescription? This action cannot be undone.')) {
       try {
         const response = await apiClient.delete(`/prescriptions/${id}`);
         if (response.data?.success) {
+          if (editingId === id) {
+            setEditingId(null);
+            setIsAddingPrescription(false);
+            setFormData(initialFormData);
+          }
+          if (viewingPrescription?.id === id) {
+            setIsViewingPrescription(false);
+            setViewingPrescription(null);
+          }
           fetchPrescriptions();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting prescription:', error);
+        alert(error?.response?.data?.message || 'Failed to delete prescription');
       }
     }
   };
@@ -1195,7 +1205,7 @@ export default function PrescriptionsPage() {
             <tbody className="divide-y divide-slate-200">
               {paginatedPrescriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                     <Eye size={40} className="mx-auto mb-2 text-slate-400" />
                     <p className="text-sm">No prescriptions found</p>
                   </td>
@@ -1264,6 +1274,7 @@ export default function PrescriptionsPage() {
                             setIsViewingPrescription(true);
                           }}
                           className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5"
+                          title="View Prescription Details"
                         >
                           <Eye size={15} />
                         </Button>
@@ -1273,6 +1284,7 @@ export default function PrescriptionsPage() {
                           variant="outline"
                           onClick={() => handleEditPrescription(prescription)}
                           className="text-slate-700 hover:text-slate-900 border-slate-300 h-8 px-2.5"
+                          title="Edit Prescription"
                         >
                           <Edit size={15} />
                         </Button>
@@ -1281,8 +1293,19 @@ export default function PrescriptionsPage() {
                           size="sm"
                           className="bg-slate-900 hover:bg-slate-800 text-white h-8 px-2.5"
                           onClick={() => generatePrescriptionPDF(prescription, user?.companyDetails)}
+                          title="Print Prescription PDF"
                         >
                           <Printer size={15} />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeletePrescription(prescription.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 border-slate-300 h-8 px-2.5"
+                          title="Delete Prescription"
+                        >
+                          <Trash2 size={15} />
                         </Button>
                       </div>
                     </td>

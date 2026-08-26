@@ -623,7 +623,7 @@ function POSContent() {
                     >
                       {/* Background Category Image */}
                       <div
-                        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-transform duration-500 ease-out group-hover:scale-105"
+                        className="absolute inset-0 bg-cover bg-center pointer-events-none transition-transform duration-500 ease-out group-hover:scale-105 opacity-80"
                         style={{
                           backgroundImage: `url(${catTheme.bgImage})`,
                         }}
@@ -651,13 +651,13 @@ function POSContent() {
                             </span>
                           )}
                         </div>
-                        <h4 className="font-bold text-xs text-slate-900 line-clamp-2 min-h-[12px] group-hover:text-indigo-600 transition-colors pr-4">
+                        <h4 className="font-bold text-sm text-slate-900 line-clamp-2 min-h-[12px] group-hover:text-indigo-800 transition-colors pr-4 shadow-sm">
                           {product.name}
                         </h4>
                       </div>
 
                       {/* Card Content Bottom */}
-                      <div className="relative z-10 mt-2.5 pt-2 border-t border-slate-900/10 flex items-center justify-between">
+                      <div className="relative z-10 mt-2 pt-1 border-t border-slate-900/10 flex items-center justify-between">
                         <div>
                           <span className="text-[10px] text-slate-500 block font-medium leading-none">Price</span>
                           <span className="text-xs font-extrabold text-slate-900 font-mono">
