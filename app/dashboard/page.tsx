@@ -38,10 +38,12 @@ import {
 import Link from 'next/link';
 import apiClient from '@/lib/api-client';
 import { formatLKR, formatDateStr } from '@/lib/pdf-reports';
+import { useAuth } from '@/lib/auth/auth-context';
 
 const CATEGORY_COLORS = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   // Summary Metrics
@@ -154,11 +156,11 @@ export default function DashboardPage() {
       {/* 1. COMPACT SLIM HEADER */}
       <div className="bg-white border border-slate-200/80 rounded-xl px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
-          <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Executive Dashboard</h1>
-          <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-[10px] px-1.5 py-0.5 rounded-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Live
-          </span>
+          {/* Greeting to logged user */}
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}
+            <span className='text-indigo-600 font-bold'> {user?.name ? `, ${user.name}` : ''}</span>
+          </h1>
         </div>
 
         {/* Action Shortcuts */}
@@ -241,16 +243,15 @@ export default function DashboardPage() {
             <p className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
               {formatLKR(stockSummary.totalCostValue)}
             </p>
-            <span className="text-[10px] text-indigo-600 font-medium truncate max-w-[90px]">
+            <span className="text-[10px] text-indigo-600 font-medium truncate">
               Ret: {formatLKR(stockSummary.totalRetailValue)}
             </span>
           </div>
         </Card>
 
         {/* KPI 4: Stock Reorder Alerts */}
-        <Card className={`py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs transition-all rounded-lg ${
-          (stockSummary.lowStockCount || summary.lowStockCount) > 0 ? 'border-l-3 border-l-amber-500' : ''
-        }`}>
+        <Card className={`py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs transition-all rounded-lg ${(stockSummary.lowStockCount || summary.lowStockCount) > 0 ? 'border-l-3 border-l-amber-500' : ''
+          }`}>
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Stock Alerts</p>
             <Link href="/dashboard/reports" className="text-[10px] text-indigo-600 hover:underline font-semibold">
@@ -522,11 +523,10 @@ export default function DashboardPage() {
                       <p className="text-[10px] text-slate-400">Min: {item.min_stock} units</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
-                        item.current_stock <= 0
-                          ? 'bg-rose-50 text-rose-700 border-rose-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${item.current_stock <= 0
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
                         {item.current_stock} Left
                       </span>
                     </div>
@@ -596,11 +596,10 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-1.5 px-3 text-center">
                         <span
-                          className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-semibold ${
-                            sale.payment_status === 'completed'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}
+                          className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-semibold ${sale.payment_status === 'completed'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
                         >
                           {(sale.payment_status || 'completed').toUpperCase()}
                         </span>
