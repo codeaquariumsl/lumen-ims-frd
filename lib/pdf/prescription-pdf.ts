@@ -81,8 +81,9 @@ export interface PrescriptionData {
   orderTime?: string;
   orderLocation?: string;
   deliveryMethod?: string;
-  contactNo?: string;
+  customer_phone?: string;
   address?: string;
+  city?: string;
   collectionDate?: string;
   clinicianName?: string;
   printedOn?: string;
@@ -213,37 +214,47 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   const custIdStr = String(prescription.customerId !== undefined ? prescription.customerId : prescription.id);
   const custNameStr = prescription.customerName;
   const deliveryStr = prescription.deliveryMethod || `PICK UP [${orderLocStr}]`;
-  const contactStr = prescription.contactNo || '';
-  const addressStr = prescription.address || ',,,';
+  const contactStr = prescription.customer_phone || '';
+  const addressStr = prescription.address || '';
+  const cityStr = prescription.city || '';
 
-  doc.setFontSize(8.5);
-  doc.setFont('helvetica', 'normal');
+  // Layout constants for two-column metadata grid
+  const col1L = marginX;           // Left-column label X
+  const col1V = marginX + 30;      // Left-column value X
+  const col2L = marginX + 100;     // Right-column label X
+  const col2V = marginX + 130;     // Right-column value X
+  const rowH = 4.8;               // Row height
 
-  // Line 1: Order Date & Order Time
-  safeText(`Order Date   - ${orderDateStr}`, marginX, currentY);
-  safeText(`Order Time  -  ${orderTimeStr}`, marginX + 55, currentY);
+  const drawRow = (
+    leftLabel: string, leftVal: string,
+    rightLabel?: string, rightVal?: string
+  ) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(colors.text[0], colors.text[1], colors.text[2]);
+    safeText(leftLabel, col1L, currentY);
+    safeText(`:  ${leftVal}`, col1V, currentY);
+    if (rightLabel !== undefined) {
+      safeText(rightLabel, col2L, currentY);
+      safeText(`:  ${rightVal ?? ''}`, col2V, currentY);
+    }
+    currentY += rowH;
+  };
 
-  // Line 2: Order Location
-  currentY += 4.5;
-  safeText(`Order Location  - ${orderLocStr}`, marginX, currentY);
+  // Row 1: Order Date | Order Time
+  drawRow('Order Date', orderDateStr);
 
-  // Line 3: Customer
-  currentY += 4.5;
-  safeText(`Customer          - ${custNameStr}`, marginX, currentY);
+  // Row 2: Customer | Order Location
+  drawRow('Customer', custNameStr);
 
-  // Line 4: Delivery
-  currentY += 4.5;
-  safeText(`Delivery            - ${deliveryStr}`, marginX, currentY);
+  // Row 3: Rx Type 
+  drawRow('Rx Type', (prescription.prescriptionType || '').toUpperCase(), 'Order Location', orderLocStr);
 
-  // Line 5: Contact #
-  currentY += 4.5;
-  safeText(`Contact #         - ${contactStr}`, marginX, currentY);
+  // Row 4: Contact | Address
+  drawRow('Contact #', contactStr, 'Address', addressStr + ' ' + cityStr);
 
-  // Line 6: Address
-  currentY += 4.5;
-  safeText(`Address            - ${addressStr}`, marginX, currentY);
+  currentY += 2;
 
-  currentY += 6;
 
   // ----------------------------------------------------
   // 3. PRESCRIPTION TABLES (RIGHT & LEFT + PD)
