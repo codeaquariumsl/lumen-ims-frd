@@ -219,14 +219,14 @@ export default function PrescriptionsPage() {
           od_sph: parseFloat(p.od_sph || '0'),
           od_cyl: parseFloat(p.od_cyl || '0'),
           od_axis: p.od_axis || 0,
-          od_add: parseFloat(p.od_add || '0'),
+          od_add: p.od_add !== undefined && p.od_add !== null ? parseFloat(String(p.od_add)) : 0,
           od_va: p.od_va || '6/6',
 
           // Refractive OS
           os_sph: parseFloat(p.os_sph || '0'),
           os_cyl: parseFloat(p.os_cyl || '0'),
           os_axis: p.os_axis || 0,
-          os_add: parseFloat(p.os_add || '0'),
+          os_add: p.os_add !== undefined && p.os_add !== null ? parseFloat(String(p.os_add)) : 0,
           os_va: p.os_va || '6/6',
 
           // PD
@@ -340,13 +340,13 @@ export default function PrescriptionsPage() {
         od_sph: parseFloat(String(formData.od_sph)) || 0,
         od_cyl: parseFloat(String(formData.od_cyl)) || 0,
         od_axis: parseInt(String(formData.od_axis), 10) || 0,
-        od_add: parseFloat(String(formData.od_add)) || 0,
+        od_add: isNaN(parseFloat(String(formData.od_add))) ? 0 : parseFloat(String(formData.od_add)),
         od_va: formData.od_va,
 
         os_sph: parseFloat(String(formData.os_sph)) || 0,
         os_cyl: parseFloat(String(formData.os_cyl)) || 0,
         os_axis: parseInt(String(formData.os_axis), 10) || 0,
-        os_add: parseFloat(String(formData.os_add)) || 0,
+        os_add: isNaN(parseFloat(String(formData.os_add))) ? 0 : parseFloat(String(formData.os_add)),
         os_va: formData.os_va,
 
         pd: parseFloat(String(formData.pd)) || 62,
@@ -405,12 +405,12 @@ export default function PrescriptionsPage() {
       od_sph: prescription.od_sph !== undefined ? String(prescription.od_sph) : '0.00',
       od_cyl: prescription.od_cyl !== undefined ? String(prescription.od_cyl) : '0.00',
       od_axis: prescription.od_axis !== undefined ? String(prescription.od_axis) : '0',
-      od_add: prescription.od_add !== undefined ? String(prescription.od_add) : '0.00',
+      od_add: prescription.od_add !== undefined && prescription.od_add !== null ? (Number(prescription.od_add) > 0 ? `+${Number(prescription.od_add).toFixed(2)}` : Number(prescription.od_add).toFixed(2)) : '0.00',
       od_va: prescription.od_va || '6/6',
       os_sph: prescription.os_sph !== undefined ? String(prescription.os_sph) : '0.00',
       os_cyl: prescription.os_cyl !== undefined ? String(prescription.os_cyl) : '0.00',
       os_axis: prescription.os_axis !== undefined ? String(prescription.os_axis) : '0',
-      os_add: prescription.os_add !== undefined ? String(prescription.os_add) : '0.00',
+      os_add: prescription.os_add !== undefined && prescription.os_add !== null ? (Number(prescription.os_add) > 0 ? `+${Number(prescription.os_add).toFixed(2)}` : Number(prescription.os_add).toFixed(2)) : '0.00',
       os_va: prescription.os_va || '6/6',
       pd: prescription.pd !== undefined ? String(prescription.pd) : '62',
       pd_right: prescription.pd_right !== undefined ? String(prescription.pd_right) : '',
@@ -692,7 +692,7 @@ export default function PrescriptionsPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, od_add: e.target.value })
                         }
-                        placeholder="+2.00"
+                        placeholder="+2.00 / -0.50"
                         className="text-xs h-8 px-1.5 text-center font-mono"
                       />
                     </div>
@@ -769,7 +769,7 @@ export default function PrescriptionsPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, os_add: e.target.value })
                         }
-                        placeholder="+2.00"
+                        placeholder="+2.00 / -0.50"
                         className="text-xs h-8 px-1.5 text-center font-mono"
                       />
                     </div>
@@ -1439,7 +1439,9 @@ export default function PrescriptionsPage() {
                       </td>
                       <td className="px-3.5 py-2.5 text-center">{viewingPrescription.od_axis}°</td>
                       <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">
-                        {viewingPrescription.od_add ? `+${viewingPrescription.od_add.toFixed(2)}` : '0.00'}
+                        {viewingPrescription.od_add !== undefined && viewingPrescription.od_add !== null
+                          ? (Number(viewingPrescription.od_add) > 0 ? `+${Number(viewingPrescription.od_add).toFixed(2)}` : Number(viewingPrescription.od_add).toFixed(2))
+                          : '0.00'}
                       </td>
                       <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.od_va || '6/6'}</td>
                     </tr>
@@ -1456,7 +1458,9 @@ export default function PrescriptionsPage() {
                       </td>
                       <td className="px-3.5 py-2.5 text-center">{viewingPrescription.os_axis}°</td>
                       <td className="px-3.5 py-2.5 text-center text-indigo-600 font-bold">
-                        {viewingPrescription.os_add ? `+${viewingPrescription.os_add.toFixed(2)}` : '0.00'}
+                        {viewingPrescription.os_add !== undefined && viewingPrescription.os_add !== null
+                          ? (Number(viewingPrescription.os_add) > 0 ? `+${Number(viewingPrescription.os_add).toFixed(2)}` : Number(viewingPrescription.os_add).toFixed(2))
+                          : '0.00'}
                       </td>
                       <td className="px-3.5 py-2.5 text-center font-bold text-slate-700">{viewingPrescription.os_va || '6/6'}</td>
                     </tr>

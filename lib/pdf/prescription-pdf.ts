@@ -25,14 +25,14 @@ export interface PrescriptionData {
   od_cyl: number;
   od_axis: number;
   od_va?: string;
-  od_add?: number;
+  od_add?: number | string;
 
   // Left Eye (OS)
   os_sph: number;
   os_cyl: number;
   os_axis: number;
   os_va?: string;
-  os_add?: number;
+  os_add?: number | string;
 
   // Reading parameters
   reading_od_sph?: number;
@@ -122,10 +122,12 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   };
 
   // Helper formatting functions
-  const fmtNum = (val: number | undefined, decimals = 2): string => {
-    if (val === undefined || isNaN(val)) return '0.00';
-    const s = val.toFixed(decimals);
-    return val > 0 ? `+${s}` : s;
+  const fmtNum = (val: number | string | undefined | null, decimals = 2): string => {
+    if (val === undefined || val === null || val === '') return '0.00';
+    const num = typeof val === 'number' ? val : parseFloat(String(val));
+    if (isNaN(num)) return '0.00';
+    const s = num.toFixed(decimals);
+    return num > 0 ? `+${s}` : s;
   };
 
   const fmtAxis = (val: number | undefined): string => {
@@ -265,24 +267,34 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   const boxRightX = marginX + 92;
 
   // Values calculation
-  const odDistSph = fmtNum(prescription.od_sph);
+  const numOdSph = typeof prescription.od_sph === 'number' ? prescription.od_sph : (parseFloat(String(prescription.od_sph)) || 0);
+  const numOdAdd = prescription.od_add !== undefined && prescription.od_add !== null
+    ? (typeof prescription.od_add === 'number' ? prescription.od_add : (parseFloat(String(prescription.od_add)) || 0))
+    : 0;
+
+  const numOsSph = typeof prescription.os_sph === 'number' ? prescription.os_sph : (parseFloat(String(prescription.os_sph)) || 0);
+  const numOsAdd = prescription.os_add !== undefined && prescription.os_add !== null
+    ? (typeof prescription.os_add === 'number' ? prescription.os_add : (parseFloat(String(prescription.os_add)) || 0))
+    : 0;
+
+  const odDistSph = fmtNum(numOdSph);
   const odDistCyl = fmtNum(prescription.od_cyl);
   const odDistAxis = fmtAxis(prescription.od_axis);
   const odDistVA = prescription.od_va || '6/6';
 
-  const odAdd = prescription.od_add !== undefined ? prescription.od_add : 0;
-  const odReadSph = fmtNum(prescription.reading_od_sph !== undefined ? prescription.reading_od_sph : (prescription.od_sph + odAdd));
+  const odAdd = numOdAdd;
+  const odReadSph = fmtNum(prescription.reading_od_sph !== undefined ? prescription.reading_od_sph : (numOdSph + numOdAdd));
   const odReadCyl = fmtNum(prescription.reading_od_cyl !== undefined ? prescription.reading_od_cyl : prescription.od_cyl);
   const odReadAxis = fmtAxis(prescription.reading_od_axis !== undefined ? prescription.reading_od_axis : prescription.od_axis);
   const odReadVA = prescription.reading_od_va || '0';
 
-  const osDistSph = fmtNum(prescription.os_sph);
+  const osDistSph = fmtNum(numOsSph);
   const osDistCyl = fmtNum(prescription.os_cyl);
   const osDistAxis = fmtAxis(prescription.os_axis);
   const osDistVA = prescription.os_va || '6/6';
 
-  const osAdd = prescription.os_add !== undefined ? prescription.os_add : 0;
-  const osReadSph = fmtNum(prescription.reading_os_sph !== undefined ? prescription.reading_os_sph : (prescription.os_sph + osAdd));
+  const osAdd = numOsAdd;
+  const osReadSph = fmtNum(prescription.reading_os_sph !== undefined ? prescription.reading_os_sph : (numOsSph + numOsAdd));
   const osReadCyl = fmtNum(prescription.reading_os_cyl !== undefined ? prescription.reading_os_cyl : prescription.os_cyl);
   const osReadAxis = fmtAxis(prescription.reading_os_axis !== undefined ? prescription.reading_os_axis : prescription.os_axis);
   const osReadVA = prescription.reading_os_va || '0';
@@ -342,7 +354,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setFont('helvetica', 'normal');
   safeText('Add', boxLeftX + 2, tableTopY + 21);
   doc.setFont('helvetica', 'bold');
-  safeText(odAdd, (colX_R[1] + colX_R[2]) / 2, tableTopY + 21, { align: 'center' });
+  safeText(fmtNum(odAdd), (colX_R[1] + colX_R[2]) / 2, tableTopY + 21, { align: 'center' });
 
   // Row 4: Prism
   doc.setFont('helvetica', 'normal');
@@ -398,7 +410,7 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setFont('helvetica', 'normal');
   safeText('Add', boxRightX + 2, tableTopY + 21);
   doc.setFont('helvetica', 'bold');
-  safeText(osAdd, (colX_L[1] + colX_L[2]) / 2, tableTopY + 21, { align: 'center' });
+  safeText(fmtNum(osAdd), (colX_L[1] + colX_L[2]) / 2, tableTopY + 21, { align: 'center' });
 
   // --- PD TABLE (Below Left Table) ---
   const pdTopY = tableTopY + 23;
