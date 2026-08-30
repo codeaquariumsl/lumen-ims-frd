@@ -37,96 +37,96 @@ export default function LoginPage() {
       <div className="flex w-full flex-col px-8 py-8 md:w-1/2 lg:px-24 relative">
         <div className="flex-1 flex flex-col justify-center">
           <div className="mx-auto w-full max-w-md">
-          <div className="mb-10 text-center md:text-left">
-            {/* Logo */}
-            {/* <div className="flex justify-center md:justify-start mb-8">
+            <div className="mb-10 text-center md:text-left">
+              {/* Logo */}
+              {/* <div className="flex justify-center md:justify-start mb-8">
               <img src="/assets/logo_name.jpg" alt="Lumen Opticals" className="h-32 w-auto object-contain" />
             </div> */}
 
-            <h2 className="text-3xl font-extrabold text-[#374151]">Welcome back</h2>
-            <p className="mt-2 text-sm text-gray-500">
-              Please sign in to your account
-            </p>
-          </div>
+              <h2 className="text-3xl font-extrabold text-[#374151]">Welcome back</h2>
+              <p className="mt-2 text-sm text-gray-500">
+                Please sign in to your account
+              </p>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {(error || authError) && (
-              <div className="rounded-lg bg-red-50 p-4 border border-red-200">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">Authentication Error</h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      <p>{error || authError}</p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {(error || authError) && (
+                <div className="rounded-lg bg-red-50 p-4 border border-red-200">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">Authentication Error</h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <p>{error || authError}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-[#374151]">
-                Email Address
-              </label>
-              <div className="mt-2 relative rounded-md shadow-sm">
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@optical.com"
-                  required
-                  disabled={isLoading}
-                  className="block w-full rounded-lg border-gray-300 py-3 pl-4 focus:border-[#f47b20] focus:ring-[#f47b20] sm:text-sm bg-white shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-semibold text-[#374151]">
-                  Password
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-[#374151]">
+                  Email Address
                 </label>
-                <a href="#" className="text-sm font-medium text-[#f47b20] hover:text-[#d96715] transition-colors">
-                  Forgot password?
-                </a>
+                <div className="mt-2 relative rounded-md shadow-sm">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="user@email.com"
+                    required
+                    disabled={isLoading}
+                    className="block w-full rounded-lg border-gray-300 py-3 pl-4 focus:border-[#f47b20] focus:ring-[#f47b20] sm:text-sm bg-white shadow-sm"
+                  />
+                </div>
               </div>
-              <div className="mt-2 relative rounded-md shadow-sm">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
-                  className="block w-full rounded-lg border-gray-300 py-3 pl-4 pr-10 focus:border-[#f47b20] focus:ring-[#f47b20] sm:text-sm bg-white shadow-sm"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#f47b20] focus:outline-none transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <Eye className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </button>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm font-semibold text-[#374151]">
+                    Password
+                  </label>
+                  <a href="#" className="text-sm font-medium text-[#f47b20] hover:text-[#d96715] transition-colors">
+                    Forgot password?
+                  </a>
+                </div>
+                <div className="mt-2 relative rounded-md shadow-sm">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                    className="block w-full rounded-lg border-gray-300 py-3 pl-4 pr-10 focus:border-[#f47b20] focus:ring-[#f47b20] sm:text-sm bg-white shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-[#f47b20] focus:outline-none transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-5 w-5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="flex w-full justify-center items-center gap-2 rounded-lg bg-[#f47b20] py-6 text-base font-bold text-white shadow-md hover:bg-[#d96715] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#f47b20] focus:ring-offset-2 transition-all"
-            >
-              <LogIn className="h-5 w-5" />
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="flex w-full justify-center items-center gap-2 rounded-lg bg-[#f47b20] py-6 text-base font-bold text-white shadow-md hover:bg-[#d96715] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#f47b20] focus:ring-offset-2 transition-all"
+              >
+                <LogIn className="h-5 w-5" />
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
 
-          {/* Demo Credentials */}
-          {/* <div className="mt-12 rounded-xl bg-white p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
+            {/* Demo Credentials */}
+            {/* <div className="mt-12 rounded-xl bg-white p-6 shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-shadow">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#f47b20]"></div>
             <h4 className="text-sm font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -135,7 +135,7 @@ export default function LoginPage() {
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Admin Email:</span>
-                <code className="font-mono text-[#f47b20] bg-orange-50 px-2 py-1 rounded font-medium">admin@optical.com</code>
+                <code className="font-mono text-[#f47b20] bg-orange-50 px-2 py-1 rounded font-medium">admin@email.com</code>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Password:</span>
