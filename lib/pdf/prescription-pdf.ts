@@ -185,7 +185,14 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
   doc.setLineWidth(0.4);
   doc.rect(orderBoxX, orderBoxY, orderBoxW, orderBoxH);
 
-  const rawOrderNo = prescription.prescriptionNumber || prescription.orderNo || prescription.id || '0690000565';
+  const rawOrderNo =
+    prescription.orderNo ||
+    (prescription as any).order_no ||
+    (prescription as any).invoice_number ||
+    (prescription as any).invoiceNumber ||
+    prescription.prescriptionNumber ||
+    prescription.id ||
+    '';
   const orderNo = String(rawOrderNo);
 
   doc.setFont('helvetica', 'bold');
@@ -627,21 +634,39 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
 
     let grandTotal = 0;
 
-    displayItems.forEach((item) => {
+    displayItems.forEach((item: any) => {
       const rowH = 6;
       const typeLabel = item.type ? `${item.type}   ` : '';
-      const codeStr = `${typeLabel}${item.code || ''}`;
-      const disPctStr = item.discountPercent !== undefined ? item.discountPercent.toFixed(2) : '0.00';
-      const disAmtStr = item.discountAmount !== undefined ? item.discountAmount.toFixed(2) : '0.00';
-      const rateStr = item.rate.toFixed(2);
-      const amtStr = item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const codeStr = `${item.code || ''}`;
 
-      grandTotal += item.amount;
+      const itemRate = typeof item.rate === 'number'
+        ? item.rate
+        : (parseFloat(String(item.unit_price ?? item.rate ?? 0)) || 0);
+      const itemQty = typeof item.qty === 'number'
+        ? item.qty
+        : (parseInt(String(item.quantity ?? item.qty ?? 1), 10) || 1);
+      const itemDisPct = item.discountPercent !== undefined
+        ? Number(item.discountPercent)
+        : (Number(item.discount_percentage) || 0);
+      const itemDisAmt = item.discountAmount !== undefined
+        ? Number(item.discountAmount)
+        : (Number(item.discount_amount) || 0);
+      const itemAmt = typeof item.amount === 'number'
+        ? item.amount
+        : (parseFloat(String(item.line_total ?? item.amount ?? (itemRate * itemQty - itemDisAmt))) || 0);
+      const itemDesc = item.description || item.name || 'Optical Item';
+
+      const disPctStr = itemDisPct.toFixed(2);
+      const disAmtStr = itemDisAmt.toFixed(2);
+      const rateStr = itemRate.toFixed(2);
+      const amtStr = itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      grandTotal += itemAmt;
 
       safeText(codeStr, itemCols[0] + 2, currentY + 4.2);
-      safeText(item.description, itemCols[1] + 2, currentY + 4.2, { maxWidth: 82 });
+      safeText(itemDesc, itemCols[1] + 2, currentY + 4.2, { maxWidth: 82 });
       safeText(rateStr, itemCols[3] - 2, currentY + 4.2, { align: 'right' });
-      safeText(item.qty, itemCols[4] - 2, currentY + 4.2, { align: 'right' });
+      safeText(String(itemQty), itemCols[4] - 2, currentY + 4.2, { align: 'right' });
       safeText(disPctStr, itemCols[5] - 2, currentY + 4.2, { align: 'right' });
       safeText(disAmtStr, itemCols[6] - 2, currentY + 4.2, { align: 'right' });
       safeText(amtStr, itemCols[7] - 2, currentY + 4.2, { align: 'right' });
@@ -650,7 +675,15 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
     });
 
     // Calculate final total
-    const finalTotal = prescription.totalAmount !== undefined ? prescription.totalAmount : grandTotal;
+    const finalTotal = prescription.totalAmount !== undefined && !isNaN(Number(prescription.totalAmount))
+      ? Number(prescription.totalAmount)
+      : (prescription.total_amount !== undefined && !isNaN(Number(prescription.total_amount))
+        ? Number(prescription.total_amount)
+        : (prescription.netAmount !== undefined && !isNaN(Number(prescription.netAmount))
+          ? Number(prescription.netAmount)
+          : (prescription.net_amount !== undefined && !isNaN(Number(prescription.net_amount))
+            ? Number(prescription.net_amount)
+            : grandTotal)));
     const formattedTotal = finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     // Total Line

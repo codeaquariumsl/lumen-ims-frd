@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer, ShoppingCart, FileText } from 'lucide-react';
-import { generatePrescriptionPDF } from '@/lib/pdf/prescription-pdf';
+import { Plus, Edit, Trash2, Eye, Download, X, Search, Printer, ShoppingCart, FileText, CheckCircle2, PackageCheck } from 'lucide-react';
+import { generatePrescriptionPDF, PrescriptionItem } from '@/lib/pdf/prescription-pdf';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -23,6 +23,9 @@ interface Prescription {
   prescriptionNumber?: string;
   customerName: string;
   customerId?: string;
+  customer_phone?: string;
+  address?: string;
+  city?: string;
   staffId?: string;
   staff_id?: string;
   clinicianName?: string;
@@ -31,6 +34,31 @@ interface Prescription {
   age?: number;
   prescriptionDate: string;
   expiryDate: string;
+
+  // Order & items association
+  hasOrder?: boolean;
+  has_order?: boolean;
+  orderId?: string | number;
+  order_id?: string | number;
+  orderNo?: string | number;
+  order_no?: string | number;
+  orderDate?: string;
+  order_date?: string;
+  orderTime?: string;
+  order_time?: string;
+  totalAmount?: number;
+  total_amount?: number;
+  netAmount?: number;
+  net_amount?: number;
+  advanceAmount?: number;
+  advance_amount?: number;
+  balanceAmount?: number;
+  balance_amount?: number;
+  paymentStatus?: string;
+  payment_status?: string;
+  paymentMethod?: string;
+  payment_method?: string;
+  items?: PrescriptionItem[];
 
   // Refractive OD
   od_sph: number;
@@ -214,6 +242,31 @@ export default function PrescriptionsPage() {
           age: p.date_of_birth ? calculateAge(p.date_of_birth) : undefined,
           prescriptionDate: p.prescription_date ? p.prescription_date.split('T')[0] : '',
           expiryDate: p.expiry_date ? p.expiry_date.split('T')[0] : '',
+
+          // Order details & items
+          hasOrder: Boolean(p.has_order || p.hasOrder || p.order_id || p.orderId),
+          has_order: Boolean(p.has_order || p.hasOrder || p.order_id || p.orderId),
+          orderId: p.order_id || p.orderId,
+          order_id: p.order_id || p.orderId,
+          orderNo: p.order_no || p.orderNo,
+          order_no: p.order_no || p.orderNo,
+          orderDate: p.order_date || p.orderDate,
+          order_date: p.order_date || p.orderDate,
+          orderTime: p.order_time || p.orderTime,
+          order_time: p.order_time || p.orderTime,
+          totalAmount: p.totalAmount !== undefined ? p.totalAmount : (p.net_amount ? parseFloat(p.net_amount) : (p.total_amount ? parseFloat(p.total_amount) : 0)),
+          total_amount: p.total_amount !== undefined ? parseFloat(p.total_amount) : undefined,
+          netAmount: p.net_amount !== undefined ? parseFloat(p.net_amount) : undefined,
+          net_amount: p.net_amount !== undefined ? parseFloat(p.net_amount) : undefined,
+          advanceAmount: p.advance_amount !== undefined ? parseFloat(p.advance_amount) : undefined,
+          advance_amount: p.advance_amount !== undefined ? parseFloat(p.advance_amount) : undefined,
+          balanceAmount: p.balance_amount !== undefined ? parseFloat(p.balance_amount) : undefined,
+          balance_amount: p.balance_amount !== undefined ? parseFloat(p.balance_amount) : undefined,
+          paymentStatus: p.payment_status || p.paymentStatus,
+          payment_status: p.payment_status || p.paymentStatus,
+          paymentMethod: p.payment_method || p.paymentMethod,
+          payment_method: p.payment_method || p.paymentMethod,
+          items: p.items || [],
 
           // Refractive OD
           od_sph: parseFloat(p.od_sph || '0'),
@@ -1223,10 +1276,28 @@ export default function PrescriptionsPage() {
                     <td className="px-5 py-3">
                       <div>
                         <p className="font-semibold text-slate-900">{prescription.customerName}</p>
-                        <p className="text-xs text-slate-500">
-                          {prescription.age && `Age: ${prescription.age} years`}
-                        </p>
-                        <p className="text-xs text-indigo-600 font-medium">Rx #: {prescription.prescriptionNumber || prescription.id}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {prescription.age && (
+                            <span className="text-xs text-slate-500">Age: {prescription.age} yrs</span>
+                          )}
+                          <span className="text-xs text-indigo-600 font-medium">
+                            Rx #{prescription.prescriptionNumber || prescription.id}
+                          </span>
+                        </div>
+                        {prescription.hasOrder && prescription.orderNo ? (
+                          <div className="mt-1 flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                              <PackageCheck size={12} className="text-emerald-600" />
+                              Order #{prescription.orderNo} ({prescription.items?.length || 0} items)
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] text-slate-400 bg-slate-100">
+                              No order linked
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-3">
@@ -1587,6 +1658,106 @@ export default function PrescriptionsPage() {
                   <p className="text-slate-800 font-medium">{viewingPrescription.remarks}</p>
                 </div>
               )}
+
+              {/* Associated Order & Products / Items Section */}
+              {viewingPrescription.hasOrder ? (
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700">
+                        <PackageCheck size={16} />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                          Associated Order #{viewingPrescription.orderNo || viewingPrescription.orderId}
+                          <span
+                            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                              viewingPrescription.paymentStatus === 'completed'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                            }`}
+                          >
+                            {viewingPrescription.paymentStatus || 'Ordered'}
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Order Date:{' '}
+                          {viewingPrescription.orderDate
+                            ? new Date(viewingPrescription.orderDate).toLocaleDateString('en-GB')
+                            : 'N/A'}{' '}
+                          {viewingPrescription.orderTime ? `• ${viewingPrescription.orderTime}` : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs font-mono">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-sans uppercase font-bold">Total Net</span>
+                        <span className="font-bold text-slate-900">
+                          LKR {(viewingPrescription.totalAmount || viewingPrescription.netAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      {viewingPrescription.balanceAmount !== undefined && Number(viewingPrescription.balanceAmount) > 0 && (
+                        <div>
+                          <span className="text-[10px] text-red-500 block font-sans uppercase font-bold">Balance Due</span>
+                          <span className="font-bold text-red-600">
+                            LKR {Number(viewingPrescription.balanceAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Items Table */}
+                  {viewingPrescription.items && viewingPrescription.items.length > 0 ? (
+                    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                      <table className="w-full text-xs">
+                        <thead className="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
+                          <tr>
+                            <th className="px-3 py-2 text-left text-[11px]">Type / Code</th>
+                            <th className="px-3 py-2 text-left text-[11px]">Description</th>
+                            <th className="px-3 py-2 text-right text-[11px]">Rate</th>
+                            <th className="px-3 py-2 text-center text-[11px]">Qty</th>
+                            <th className="px-3 py-2 text-right text-[11px]">Dis. %</th>
+                            <th className="px-3 py-2 text-right text-[11px]">Dis. Amt</th>
+                            <th className="px-3 py-2 text-right text-[11px]">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono">
+                          {viewingPrescription.items.map((item, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/50">
+                              <td className="px-3 py-2 font-medium text-slate-800">
+                                {item.type ? <span className="font-bold text-indigo-600 mr-1.5">{item.type}</span> : null}
+                                {item.code || '-'}
+                              </td>
+                              <td className="px-3 py-2 font-sans text-slate-900 font-medium">
+                                {item.description || (item as any).name || 'Optical Item'}
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-700">
+                                {(typeof item.rate === 'number' ? item.rate : (parseFloat(String((item as any).unit_price || 0)) || 0)).toFixed(2)}
+                              </td>
+                              <td className="px-3 py-2 text-center font-bold text-slate-800">
+                                {item.qty ?? (item as any).quantity ?? 1}
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-600">
+                                {(item.discountPercent !== undefined ? Number(item.discountPercent) : (Number((item as any).discount_percentage) || 0)).toFixed(2)}%
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-600">
+                                {(item.discountAmount !== undefined ? Number(item.discountAmount) : (Number((item as any).discount_amount) || 0)).toFixed(2)}
+                              </td>
+                              <td className="px-3 py-2 text-right font-bold text-slate-900">
+                                {(typeof item.amount === 'number' ? item.amount : (parseFloat(String((item as any).line_total || 0)) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic">No line items recorded for this order.</p>
+                  )}
+                </div>
+              ) : null}
 
               {/* Actions Footer */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-100">
