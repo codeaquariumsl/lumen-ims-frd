@@ -566,12 +566,12 @@ export default function InventoryPage() {
             @media print {
               @page {
                 size: 2in 1in portrait;
-                margin: 0 0 8mm 10mm !important;
+                margin: 0 0 8mm 5mm !important;
               }
               html, body {
                 width: 2in !important;
                 height: 1in !important;
-                margin: 0 0 8mm 5mm !important;
+                margin: 0 0 8mm 3mm !important;
                 padding: 0 !important;
                 overflow: hidden !important;
               }
