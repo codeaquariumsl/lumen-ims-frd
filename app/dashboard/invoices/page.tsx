@@ -531,16 +531,16 @@ export default function InvoicesPage() {
                               invoice.payment_status === 'pending' ||
                               invoice.payment_status === 'unpaid' ||
                               parseFloat(invoice.balance_amount || '0') > 0) && (
-                            <Button
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1 h-8 px-2 text-xs font-semibold shadow-2xs cursor-pointer"
-                              onClick={() => openCollectPaymentModal(invoice)}
-                              title="Collect Outstanding Balance"
-                            >
-                              <DollarSign size={13} />
-                              <span className="hidden xl:inline">Collect</span>
-                            </Button>
-                          )}
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1 h-8 px-2 text-xs font-semibold shadow-2xs cursor-pointer"
+                                onClick={() => openCollectPaymentModal(invoice)}
+                                title="Collect Outstanding Balance"
+                              >
+                                <DollarSign size={13} />
+                                <span className="hidden xl:inline">Collect</span>
+                              </Button>
+                            )}
                           <Button
                             size="sm"
                             className="bg-slate-900 hover:bg-slate-800 text-white rounded-lg gap-1.5 h-8 px-2.5 text-xs cursor-pointer"
@@ -569,7 +569,6 @@ export default function InvoicesPage() {
                               title="Mark Invoice as Cancelled (Restores Stock)"
                             >
                               <Ban size={13} />
-                              <span className="hidden xl:inline">Cancel</span>
                             </Button>
                           ) : (
                             <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded text-[10px] font-semibold text-rose-500 bg-rose-50 border border-rose-100">
@@ -881,15 +880,15 @@ export default function InvoicesPage() {
               <div className="flex items-center gap-2">
                 {selectedInvoice.status !== 'cancelled' &&
                   (parseFloat(selectedInvoice.balance_amount || '0') > 0 || selectedInvoice.payment_status !== 'completed') && (
-                  <Button
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8 text-xs gap-1.5 font-semibold shadow-2xs cursor-pointer"
-                    onClick={() => openCollectPaymentModal(selectedInvoice)}
-                  >
-                    <DollarSign size={14} />
-                    Collect Balance (LKR.{parseFloat(selectedInvoice.balance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })})
-                  </Button>
-                )}
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8 text-xs gap-1.5 font-semibold shadow-2xs cursor-pointer"
+                      onClick={() => openCollectPaymentModal(selectedInvoice)}
+                    >
+                      <DollarSign size={14} />
+                      Collect Balance (LKR.{parseFloat(selectedInvoice.balance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })})
+                    </Button>
+                  )}
 
                 {selectedInvoice.status !== 'cancelled' && (
                   <Button
@@ -1055,11 +1054,10 @@ export default function InvoicesPage() {
                         key={pm.id}
                         type="button"
                         onClick={() => setCollectPaymentMethod(pm.id)}
-                        className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
-                          collectPaymentMethod === pm.id
+                        className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${collectPaymentMethod === pm.id
                             ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                             : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
-                        }`}
+                          }`}
                       >
                         <IconComp size={15} />
                         <span>{pm.label}</span>
@@ -1091,11 +1089,10 @@ export default function InvoicesPage() {
                 const willComplete = newBal <= 0;
 
                 return (
-                  <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-                    willComplete
+                  <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${willComplete
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : 'bg-amber-50 border-amber-200 text-amber-900'
-                  }`}>
+                    }`}>
                     <div className="flex items-center gap-1.5">
                       {willComplete ? <CheckCircle2 size={15} className="text-emerald-600" /> : <Clock size={15} className="text-amber-600" />}
                       <span className="font-semibold">
