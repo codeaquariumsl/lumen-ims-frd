@@ -44,6 +44,7 @@ export interface SalePdfData {
   prior_advance?: number | string;
   payment_method?: string;
   payment_status?: string;
+  status?: string;
   payment_type?: string;
   items?: SalePdfItem[];
   attached_prescription?: any;
@@ -214,6 +215,19 @@ export function drawInvoicePage(doc: jsPDF, data: SalePdfData, companyDetails?: 
   safeText(doc, formatDate(collDate), boxX + boxW / 2, boxY + 21, { align: 'center' });
 
   currentY += 26;
+
+  if (data.status === 'cancelled') {
+    doc.setFillColor(254, 226, 226);
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(0.4);
+    doc.rect(marginX, currentY - 1, pageWidth - 2 * marginX, 6, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(185, 28, 28);
+    safeText(doc, '*** VOID - THIS SALES INVOICE HAS BEEN CANCELLED ***', pageWidth / 2, currentY + 3.2, { align: 'center' });
+    doc.setTextColor(20, 20, 20);
+    currentY += 7;
+  }
 
   // Horizontal top divider
   doc.setLineWidth(0.4);
@@ -446,6 +460,20 @@ export function drawReceiptPage(doc: jsPDF, data: SalePdfData, companyDetails?: 
   safeText(doc, dateStr, 155, currentY);
 
   currentY += 4;
+
+  if (data.status === 'cancelled') {
+    doc.setFillColor(254, 226, 226);
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(0.4);
+    doc.rect(marginX, currentY - 1, pageWidth - 2 * marginX, 5.5, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(185, 28, 28);
+    safeText(doc, '*** VOID - THIS RECEIPT HAS BEEN CANCELLED ***', pageWidth / 2, currentY + 3, { align: 'center' });
+    doc.setTextColor(20, 20, 20);
+    currentY += 6.5;
+  }
+
   doc.line(marginX, currentY, pageWidth - marginX, currentY);
 
   // Table Headers

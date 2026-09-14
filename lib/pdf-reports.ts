@@ -432,7 +432,7 @@ export function generateSalesSummaryPDF(data: any[], summary: any, filters: { st
   }, 'landscape');
 
   const headers = [
-    ['#', 'Invoice #', 'Date & Time', 'Customer Name', 'Phone', 'Items', 'Subtotal', 'Discount', 'Net Amount', 'Paid', 'Balance', 'Method', 'Status']
+    ['#', 'Invoice #', 'Date & Time', 'Customer Name', 'Phone', 'Items', 'Subtotal', 'Discount', 'Net Amount', 'Paid', 'Balance', 'Method', 'Inv Status', 'Payment']
   ];
 
   let subSum = 0;
@@ -448,11 +448,14 @@ export function generateSalesSummaryPDF(data: any[], summary: any, filters: { st
     const paid = parseFloat(row.advance_amount || 0);
     const bal = parseFloat(row.balance_amount || 0);
 
-    subSum += sub;
-    discSum += disc;
-    netSum += net;
-    paidSum += paid;
-    balSum += bal;
+    // Only add confirmed rows to totals if mixed
+    if (row.status !== 'cancelled') {
+      subSum += sub;
+      discSum += disc;
+      netSum += net;
+      paidSum += paid;
+      balSum += bal;
+    }
 
     return [
       (idx + 1).toString(),
@@ -467,19 +470,20 @@ export function generateSalesSummaryPDF(data: any[], summary: any, filters: { st
       paid.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       bal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       (row.payment_method || 'cash').toUpperCase(),
+      (row.status || 'confirmed').toUpperCase(),
       (row.payment_status || 'completed').toUpperCase()
     ];
   });
 
   const foot = [
     [
-      { content: 'TOTAL', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: 'CONFIRMED TOTAL', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold' } },
       { content: subSum.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), styles: { halign: 'right', fontStyle: 'bold' } },
       { content: discSum.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), styles: { halign: 'right', fontStyle: 'bold' } },
       { content: netSum.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), styles: { halign: 'right', fontStyle: 'bold' } },
       { content: paidSum.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), styles: { halign: 'right', fontStyle: 'bold' } },
       { content: balSum.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), styles: { halign: 'right', fontStyle: 'bold' } },
-      { content: '', colSpan: 2 }
+      { content: '', colSpan: 3 }
     ]
   ];
 

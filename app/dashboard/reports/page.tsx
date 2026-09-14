@@ -66,6 +66,7 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('all');
+  const [selectedSalesStatus, setSelectedSalesStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoriesList, setCategoriesList] = useState<string[]>([]);
 
@@ -157,7 +158,12 @@ export default function ReportsPage() {
           setItemSalesData(res.data?.data || { summary: {}, records: [] });
         } else if (salesSubTab === 'sales_summary') {
           const res = await apiClient.get('/reports/sales/summary', {
-            params: { startDate, endDate, search: searchQuery }
+            params: {
+              startDate,
+              endDate,
+              search: searchQuery,
+              status: selectedSalesStatus !== 'all' ? selectedSalesStatus : undefined
+            }
           });
           setSalesSummaryData(res.data?.data || { summary: {}, records: [] });
         } else if (salesSubTab === 'payment_collections') {

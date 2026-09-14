@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Calendar, Eye, Printer, X, Receipt, Building, CheckCircle2, Clock, AlertCircle, Eye as EyeIcon, DollarSign, FileText, CreditCard, Banknote, QrCode } from 'lucide-react';
+import { Search, Calendar, Eye, Printer, X, Receipt, Building, CheckCircle2, Clock, AlertCircle, Eye as EyeIcon, DollarSign, FileText, CreditCard, Banknote, QrCode, Ban, XCircle, AlertTriangle } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { printSalePDF } from '@/lib/pdf/sales-pdf';
@@ -39,6 +39,7 @@ interface Invoice {
   balance_amount?: string;
   payment_method: string;
   payment_status: string;
+  status?: string;
   notes: string | null;
   sale_date: string;
   first_name: string | null;
@@ -83,6 +84,7 @@ export default function InvoicesPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,6 +102,12 @@ export default function InvoicesPage() {
   const [collectPaymentMethod, setCollectPaymentMethod] = useState<string>('cash');
   const [collectNotes, setCollectNotes] = useState<string>('');
   const [isCollecting, setIsCollecting] = useState<boolean>(false);
+
+  // Cancel Invoice Modal State
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancellingInvoice, setCancellingInvoice] = useState<Invoice | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('');
+  const [isCancelling, setIsCancelling] = useState<boolean>(false);
 
   // Fetch branches for admin role
   useEffect(() => {
@@ -128,6 +136,7 @@ export default function InvoicesPage() {
           startDate: startDate || undefined,
           endDate: endDate || undefined,
           branchId: user?.role === 'admin' ? (selectedBranch || undefined) : undefined,
+          status: selectedStatus || undefined,
           page: currentPage,
           limit: itemsPerPage
         }
@@ -147,7 +156,7 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchTerm, startDate, endDate, selectedBranch, currentPage, user]);
+  }, [searchTerm, startDate, endDate, selectedBranch, selectedStatus, currentPage, user]);
 
   // View invoice details
   const handleViewDetails = async (invoice: Invoice): Promise<Invoice> => {
@@ -227,6 +236,60 @@ export default function InvoicesPage() {
     }
   };
 
+  // Open cancel confirmation modal
+  const openCancelModal = (invoice: Invoice) => {
+    setCancellingInvoice(invoice);
+    setCancelReason('');
+    setIsCancelModalOpen(true);
+  };
+
+  // Submit invoice cancellation
+  const handleConfirmCancel = async () => {
+    if (!cancellingInvoice) return;
+    try {
+      setIsCancelling(true);
+      const response = await apiClient.post(`/sales/${cancellingInvoice.id}/cancel`, {
+        reason: cancelReason.trim() || undefined
+      });
+
+      if (response.data?.success) {
+        toast.success(`Invoice #${cancellingInvoice.invoice_number} marked as CANCELLED. Inventory stock restored.`);
+        setIsCancelModalOpen(false);
+        const updatedInvoice = response.data.data;
+        if (selectedInvoice && selectedInvoice.id === cancellingInvoice.id) {
+          setSelectedInvoice(updatedInvoice);
+        }
+        fetchInvoices();
+      } else {
+        toast.error(response.data?.message || 'Failed to cancel invoice.');
+      }
+    } catch (error: any) {
+      console.error('Error cancelling invoice:', error);
+      toast.error(error.response?.data?.message || 'Failed to cancel invoice.');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  // Helper invoice lifecycle status style (Confirm / Cancel)
+  const getInvoiceStatusBadge = (status?: string) => {
+    const s = (status || 'confirmed').toLowerCase();
+    if (s === 'cancelled' || s === 'cancel') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+          <XCircle size={11} className="text-rose-600" />
+          CANCELLED
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+        <CheckCircle2 size={11} className="text-emerald-600" />
+        CONFIRMED
+      </span>
+    );
+  };
+
   // Helper payment method style
   const getPaymentMethodBadge = (method: string) => {
     const colors: Record<string, string> = {
@@ -293,7 +356,7 @@ export default function InvoicesPage() {
 
         {/* Filters Panel */}
         <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
@@ -337,6 +400,23 @@ export default function InvoicesPage() {
               />
             </div>
 
+            {/* Status Filter (Confirm / Cancel) */}
+            <div className="relative">
+              <CheckCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
+              <select
+                value={selectedStatus}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-8 h-9 border border-slate-300 rounded-lg bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium"
+              >
+                <option value="">All Statuses (Confirm & Cancel)</option>
+                <option value="confirmed">Confirmed Only</option>
+                <option value="cancelled">Cancelled Only</option>
+              </select>
+            </div>
+
             {/* Branch Filter (Admin Only) */}
             {user?.role === 'admin' ? (
               <div className="relative">
@@ -371,20 +451,21 @@ export default function InvoicesPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="bg-slate-800 text-white text-xs font-semibold uppercase tracking-wider">
-                  <th className="px-5 py-3.5 text-left">Invoice No</th>
-                  <th className="px-5 py-3.5 text-left">Date</th>
-                  <th className="px-5 py-3.5 text-left">Customer</th>
-                  <th className="px-5 py-3.5 text-left">Prescription</th>
-                  <th className="px-5 py-3.5 text-left">Staff/Cashier</th>
-                  <th className="px-5 py-3.5 text-left">Status</th>
-                  <th className="px-5 py-3.5 text-right">Net Amount</th>
-                  <th className="px-5 py-3.5 text-center">Actions</th>
+                  <th className="px-4 py-3.5 text-left">Invoice No</th>
+                  <th className="px-4 py-3.5 text-left">Date</th>
+                  <th className="px-4 py-3.5 text-left">Customer</th>
+                  <th className="px-4 py-3.5 text-left">Prescription</th>
+                  <th className="px-4 py-3.5 text-left">Staff/Cashier</th>
+                  <th className="px-4 py-3.5 text-center">Status</th>
+                  <th className="px-4 py-3.5 text-center">Payment</th>
+                  <th className="px-4 py-3.5 text-right">Net Amount</th>
+                  <th className="px-4 py-3.5 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
                         <span className="text-xs">Loading invoices...</span>
@@ -393,7 +474,7 @@ export default function InvoicesPage() {
                   </tr>
                 ) : invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center gap-1">
                         <span className="font-semibold text-slate-900 text-sm">No Invoices Found</span>
                         <span className="text-xs text-slate-400">Try adjusting your filters or search queries.</span>
@@ -404,10 +485,10 @@ export default function InvoicesPage() {
                   invoices.map((invoice, idx) => (
                     <tr
                       key={invoice.id}
-                      className={`hover:bg-slate-50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+                      className={`hover:bg-slate-50 transition-colors ${invoice.status === 'cancelled' ? 'bg-rose-50/20 opacity-85' : idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
                     >
-                      <td className="px-5 py-3 font-semibold text-slate-900">{invoice.invoice_number}</td>
-                      <td className="px-5 py-3 text-slate-600 text-xs">
+                      <td className="px-4 py-3 font-semibold text-slate-900">{invoice.invoice_number}</td>
+                      <td className="px-4 py-3 text-slate-600 text-xs">
                         {new Date(invoice.sale_date).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
@@ -416,7 +497,7 @@ export default function InvoicesPage() {
                           minute: '2-digit'
                         })}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3">
                         {invoice.first_name ? (
                           <p className="font-medium text-slate-900 text-sm">
                             {invoice.first_name} {invoice.last_name || ''}
@@ -425,7 +506,7 @@ export default function InvoicesPage() {
                           <span className="text-slate-400 italic text-xs">Walk-in Customer</span>
                         )}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3">
                         {invoice.prescription_number || invoice.prescription_id ? (
                           <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">
                             <EyeIcon size={12} />
@@ -435,19 +516,21 @@ export default function InvoicesPage() {
                           <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-slate-600 text-xs">{invoice.staff_name}</td>
-                      <td className="px-5 py-3">{getPaymentStatusBadge(invoice.payment_status)}</td>
-                      <td className="px-5 py-3 text-right font-bold text-slate-900 font-mono">
+                      <td className="px-4 py-3 text-slate-600 text-xs">{invoice.staff_name}</td>
+                      <td className="px-4 py-3 text-center">{getInvoiceStatusBadge(invoice.status)}</td>
+                      <td className="px-4 py-3 text-center">{getPaymentStatusBadge(invoice.payment_status)}</td>
+                      <td className={`px-4 py-3 text-right font-bold font-mono ${invoice.status === 'cancelled' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                         LKR.{parseFloat(invoice.net_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1.5">
-                          {/* Collect Payment Action for orders with balance / partial status */}
-                          {(invoice.payment_status === 'partial' ||
-                            invoice.payment_status === 'advance' ||
-                            invoice.payment_status === 'pending' ||
-                            invoice.payment_status === 'unpaid' ||
-                            parseFloat(invoice.balance_amount || '0') > 0) && (
+                          {/* Collect Payment Action for confirmed orders with balance / partial status */}
+                          {invoice.status !== 'cancelled' &&
+                            (invoice.payment_status === 'partial' ||
+                              invoice.payment_status === 'advance' ||
+                              invoice.payment_status === 'pending' ||
+                              invoice.payment_status === 'unpaid' ||
+                              parseFloat(invoice.balance_amount || '0') > 0) && (
                             <Button
                               size="sm"
                               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg gap-1 h-8 px-2 text-xs font-semibold shadow-2xs cursor-pointer"
@@ -475,6 +558,25 @@ export default function InvoicesPage() {
                           >
                             <Printer size={14} />
                           </Button>
+
+                          {/* Mark Cancel Action */}
+                          {invoice.status !== 'cancelled' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-lg gap-1 h-8 px-2 text-xs font-semibold cursor-pointer"
+                              onClick={() => openCancelModal(invoice)}
+                              title="Mark Invoice as Cancelled (Restores Stock)"
+                            >
+                              <Ban size={13} />
+                              <span className="hidden xl:inline">Cancel</span>
+                            </Button>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded text-[10px] font-semibold text-rose-500 bg-rose-50 border border-rose-100">
+                              <XCircle size={11} />
+                              Void
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -558,13 +660,31 @@ export default function InvoicesPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Cancelled Alert Banner */}
+                  {selectedInvoice.status === 'cancelled' && (
+                    <div className="bg-rose-50 border border-rose-200 text-rose-900 p-3 rounded-xl flex items-center justify-between shadow-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-rose-100 rounded-lg text-rose-700">
+                          <Ban size={18} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs uppercase tracking-wide text-rose-800">Cancelled Invoice (Void)</p>
+                          <p className="text-[11px] text-rose-700 mt-0.5">This transaction is cancelled. All sold product stock has been restored to inventory.</p>
+                        </div>
+                      </div>
+                      <span className="bg-rose-600 text-white font-bold px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wider">
+                        CANCELLED
+                      </span>
+                    </div>
+                  )}
+
                   {/* Summary Columns */}
-                  <div className="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
                     <div>
                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Invoice Meta</p>
                       <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedInvoice.invoice_number}</p>
                       <p className="text-slate-600 text-[11px] mt-0.5">
-                        Date: {new Date(selectedInvoice.sale_date).toLocaleString()}
+                        {new Date(selectedInvoice.sale_date).toLocaleString()}
                       </p>
                     </div>
                     <div>
@@ -581,8 +701,17 @@ export default function InvoicesPage() {
                       </p>
                     </div>
                     <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Invoice Status</p>
+                      <div className="mt-1">
+                        {getInvoiceStatusBadge(selectedInvoice.status)}
+                      </div>
+                      <p className="text-slate-500 text-[10px] mt-1">
+                        {selectedInvoice.status === 'cancelled' ? 'Stock Returned' : 'Active Sale'}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Payment & Cashier</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-1.5 mt-1">
                         {getPaymentMethodBadge(selectedInvoice.payment_method)}
                         {getPaymentStatusBadge(selectedInvoice.payment_status)}
                       </div>
@@ -749,8 +878,9 @@ export default function InvoicesPage() {
 
             {/* Modal Actions */}
             <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
-              <div>
-                {(parseFloat(selectedInvoice.balance_amount || '0') > 0 || selectedInvoice.payment_status !== 'completed') && (
+              <div className="flex items-center gap-2">
+                {selectedInvoice.status !== 'cancelled' &&
+                  (parseFloat(selectedInvoice.balance_amount || '0') > 0 || selectedInvoice.payment_status !== 'completed') && (
                   <Button
                     size="sm"
                     className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8 text-xs gap-1.5 font-semibold shadow-2xs cursor-pointer"
@@ -758,6 +888,22 @@ export default function InvoicesPage() {
                   >
                     <DollarSign size={14} />
                     Collect Balance (LKR.{parseFloat(selectedInvoice.balance_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })})
+                  </Button>
+                )}
+
+                {selectedInvoice.status !== 'cancelled' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-rose-300 text-rose-600 hover:bg-rose-50 hover:border-rose-400 rounded-lg h-8 text-xs gap-1.5 font-semibold cursor-pointer"
+                    onClick={() => {
+                      setIsDetailOpen(false);
+                      openCancelModal(selectedInvoice);
+                    }}
+                    title="Cancel this sales invoice"
+                  >
+                    <Ban size={14} />
+                    Cancel Invoice
                   </Button>
                 )}
               </div>
@@ -992,6 +1138,124 @@ export default function InvoicesPage() {
                   <>
                     <CheckCircle2 size={14} />
                     Confirm & Record Payment
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Cancel Invoice Confirmation Modal Dialog */}
+      {isCancelModalOpen && cancellingInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 print:hidden animate-in fade-in duration-150">
+          <Card className="w-full max-w-md bg-white border border-slate-200 shadow-2xl rounded-2xl overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-rose-900 text-white flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-rose-800 rounded-xl">
+                  <Ban size={18} className="text-rose-200" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">Cancel Sales Invoice</h3>
+                  <p className="text-[11px] text-rose-200">Invoice #{cancellingInvoice.invoice_number}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCancelModalOpen(false)}
+                className="text-rose-200 hover:text-white p-1 rounded-lg hover:bg-rose-800 transition-colors cursor-pointer"
+                disabled={isCancelling}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 text-xs">
+              {/* Warning Alert */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-amber-800">
+                  <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                  <span>Important Confirmation</span>
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  Marking this invoice as <strong>Cancelled</strong> will:
+                </p>
+                <ul className="list-disc list-inside text-[11px] text-amber-800 space-y-0.5 pl-1">
+                  <li>Restore all sold item quantities back into branch stock</li>
+                  <li>Reduce total sales metrics in dashboard analytics and reports</li>
+                  <li>Adjust customer total spending balance</li>
+                  <li>Void any further payment collections on this invoice</li>
+                </ul>
+              </div>
+
+              {/* Invoice Summary Card */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Customer:</span>
+                  <span className="font-semibold text-slate-800">
+                    {cancellingInvoice.first_name ? `${cancellingInvoice.first_name} ${cancellingInvoice.last_name || ''}` : 'Walk-in Customer'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Invoice Net Total:</span>
+                  <span className="font-mono font-bold text-slate-900 text-sm">
+                    LKR.{parseFloat(cancellingInvoice.net_amount || '0').toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Invoice Date:</span>
+                  <span className="text-slate-700">
+                    {new Date(cancellingInvoice.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Cancellation Reason */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Cancellation Reason (Optional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Customer returned order, billing mistake, test order..."
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="h-9 text-xs border-slate-300 rounded-xl"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg text-xs cursor-pointer"
+                onClick={() => setIsCancelModalOpen(false)}
+                disabled={isCancelling}
+              >
+                Keep Invoice
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold gap-1.5 shadow-xs cursor-pointer"
+                onClick={handleConfirmCancel}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <Ban size={14} />
+                    Confirm & Cancel Invoice
                   </>
                 )}
               </Button>
