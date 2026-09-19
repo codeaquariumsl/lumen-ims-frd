@@ -85,6 +85,7 @@ export default function InvoicesPage() {
   const [endDate, setEndDate] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,6 +138,7 @@ export default function InvoicesPage() {
           endDate: endDate || undefined,
           branchId: user?.role === 'admin' ? (selectedBranch || undefined) : undefined,
           status: selectedStatus || undefined,
+          paymentStatus: selectedPaymentStatus || undefined,
           page: currentPage,
           limit: itemsPerPage
         }
@@ -156,7 +158,7 @@ export default function InvoicesPage() {
 
   useEffect(() => {
     fetchInvoices();
-  }, [searchTerm, startDate, endDate, selectedBranch, selectedStatus, currentPage, user]);
+  }, [searchTerm, startDate, endDate, selectedBranch, selectedStatus, selectedPaymentStatus, currentPage, user]);
 
   // View invoice details
   const handleViewDetails = async (invoice: Invoice): Promise<Invoice> => {
@@ -283,8 +285,8 @@ export default function InvoicesPage() {
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-        <CheckCircle2 size={11} className="text-emerald-600" />
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+        <CheckCircle2 size={11} className="text-blue-600" />
         CONFIRMED
       </span>
     );
@@ -333,6 +335,39 @@ export default function InvoicesPage() {
         COMPLETED
       </span>
     );
+  };
+
+  // Helper for truncated sliding-window pagination buttons
+  const getPaginationItems = (current: number, total: number): (number | string)[] => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const items: (number | string)[] = [];
+
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) {
+        items.push(i);
+      }
+      items.push('...');
+      items.push(total);
+    } else if (current >= total - 3) {
+      items.push(1);
+      items.push('...');
+      for (let i = total - 4; i <= total; i++) {
+        items.push(i);
+      }
+    } else {
+      items.push(1);
+      items.push('...');
+      items.push(current - 1);
+      items.push(current);
+      items.push(current + 1);
+      items.push('...');
+      items.push(total);
+    }
+
+    return items;
   };
 
   return (
@@ -416,32 +451,23 @@ export default function InvoicesPage() {
                 <option value="cancelled">Cancelled Only</option>
               </select>
             </div>
-
-            {/* Branch Filter (Admin Only) */}
-            {user?.role === 'admin' ? (
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
-                <select
-                  value={selectedBranch}
-                  onChange={(e) => {
-                    setSelectedBranch(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full pl-8 h-9 border border-slate-300 rounded-lg bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900"
-                >
-                  <option value="">All Branches</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="flex items-center text-xs text-slate-500 px-3 bg-slate-50 border border-slate-200 rounded-lg h-9">
-                <span>Branch Filter Restricted</span>
-              </div>
-            )}
+            {/* Payment Status Filter */}
+            <div className="relative">
+              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={15} />
+              <select
+                value={selectedPaymentStatus}
+                onChange={(e) => {
+                  setSelectedPaymentStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-8 h-9 border border-slate-300 rounded-lg bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium"
+              >
+                <option value="">All Payment Statuses</option>
+                <option value="completed">Completed (Fully Paid)</option>
+                <option value="partial">Advance / Partial</option>
+                <option value="unpaid">Unpaid / Pending</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -523,7 +549,7 @@ export default function InvoicesPage() {
                         LKR.{parseFloat(invoice.net_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-end gap-1.5">
                           {/* Collect Payment Action for confirmed orders with balance / partial status */}
                           {invoice.status !== 'cancelled' &&
                             (invoice.payment_status === 'partial' ||
@@ -603,17 +629,26 @@ export default function InvoicesPage() {
                 Previous
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-8 w-8 rounded-lg text-xs ${currentPage === page ? 'bg-slate-900 hover:bg-slate-800 text-white' : ''}`}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {getPaginationItems(currentPage, totalPages).map((item, idx) => {
+                  if (typeof item === 'string') {
+                    return (
+                      <span key={`dots-${idx}`} className="px-1.5 py-1 text-xs text-slate-400 font-bold select-none">
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <Button
+                      key={item}
+                      variant={currentPage === item ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrentPage(item)}
+                      className={`h-8 w-8 rounded-lg text-xs font-semibold ${currentPage === item ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-2xs' : 'text-slate-700 hover:bg-slate-100 border-slate-200'}`}
+                    >
+                      {item}
+                    </Button>
+                  );
+                })}
               </div>
               <Button
                 variant="outline"
@@ -1055,8 +1090,8 @@ export default function InvoicesPage() {
                         type="button"
                         onClick={() => setCollectPaymentMethod(pm.id)}
                         className={`flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${collectPaymentMethod === pm.id
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                           }`}
                       >
                         <IconComp size={15} />
@@ -1090,8 +1125,8 @@ export default function InvoicesPage() {
 
                 return (
                   <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${willComplete
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : 'bg-amber-50 border-amber-200 text-amber-900'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-amber-50 border-amber-200 text-amber-900'
                     }`}>
                     <div className="flex items-center gap-1.5">
                       {willComplete ? <CheckCircle2 size={15} className="text-emerald-600" /> : <Clock size={15} className="text-amber-600" />}

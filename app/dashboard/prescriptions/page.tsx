@@ -221,6 +221,8 @@ export default function PrescriptionsPage() {
     try {
       const response = await apiClient.get('/prescriptions', {
         params: {
+          search: tableSearch.trim() || undefined,
+          type: filterType !== 'all' ? filterType : undefined,
           page: currentPage,
           limit: itemsPerPage
         }
@@ -327,7 +329,7 @@ export default function PrescriptionsPage() {
 
   useEffect(() => {
     fetchPrescriptions();
-  }, [currentPage]);
+  }, [currentPage, tableSearch, filterType]);
 
   const handleCreateCustomer = async () => {
     if (newCustomerForm.name) {
@@ -514,19 +516,41 @@ export default function PrescriptionsPage() {
     }
   };
 
-  // Client-side search & filter
-  const filteredPrescriptions = prescriptions.filter((p) => {
-    const matchesSearch =
-      tableSearch.trim() === '' ||
-      p.customerName.toLowerCase().includes(tableSearch.toLowerCase()) ||
-      String(p.prescriptionNumber || '').toLowerCase().includes(tableSearch.toLowerCase());
-    const matchesType = filterType === 'all' || p.prescriptionType === filterType;
-    return matchesSearch && matchesType;
-  });
-
   // Pagination helper
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedPrescriptions = filteredPrescriptions;
+
+  // Helper for truncated sliding-window pagination buttons
+  const getPaginationItems = (current: number, total: number): (number | string)[] => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const items: (number | string)[] = [];
+
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) {
+        items.push(i);
+      }
+      items.push('...');
+      items.push(total);
+    } else if (current >= total - 3) {
+      items.push(1);
+      items.push('...');
+      for (let i = total - 4; i <= total; i++) {
+        items.push(i);
+      }
+    } else {
+      items.push(1);
+      items.push('...');
+      items.push(current - 1);
+      items.push(current);
+      items.push(current + 1);
+      items.push('...');
+      items.push(total);
+    }
+
+    return items;
+  };
 
   return (
     <div className="space-y-4">
@@ -1236,7 +1260,7 @@ export default function PrescriptionsPage() {
           </button>
         )}
         <span className="text-xs text-slate-400 whitespace-nowrap shrink-0">
-          {filteredPrescriptions.length} result{filteredPrescriptions.length !== 1 ? 's' : ''}
+          {totalItems} result{totalItems !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -1247,6 +1271,7 @@ export default function PrescriptionsPage() {
             {/* Table Header */}
             <thead>
               <tr className="bg-slate-800 text-white">
+                <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Number</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Customer</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Dates</th>
                 <th className="px-5 py-3.5 font-semibold text-xs uppercase tracking-wider">Type</th>
@@ -1259,30 +1284,32 @@ export default function PrescriptionsPage() {
 
             {/* Table Body */}
             <tbody className="divide-y divide-slate-200">
-              {paginatedPrescriptions.length === 0 ? (
+              {prescriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
                     <Eye size={40} className="mx-auto mb-2 text-slate-400" />
                     <p className="text-sm">No prescriptions found</p>
                   </td>
                 </tr>
               ) : (
-                paginatedPrescriptions.map((prescription, index) => (
+                prescriptions.map((prescription, index) => (
                   <tr
                     key={prescription.id}
                     className={`hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
                       }`}
                   >
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-2">
+                      <span className="text-sm text-indigo-600 font-medium">
+                        {prescription.prescriptionNumber || prescription.id}
+                      </span>
+                    </td>
+                    <td className="px-5 py-2">
                       <div>
                         <p className="font-semibold text-slate-900">{prescription.customerName}</p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           {prescription.age && (
                             <span className="text-xs text-slate-500">Age: {prescription.age} yrs</span>
                           )}
-                          <span className="text-xs text-indigo-600 font-medium">
-                            Rx #{prescription.prescriptionNumber || prescription.id}
-                          </span>
                         </div>
                         {prescription.hasOrder && prescription.orderNo ? (
                           <div className="mt-1 flex items-center gap-1">
@@ -1300,7 +1327,7 @@ export default function PrescriptionsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-2">
                       <div>
                         <p className="text-sm font-medium text-slate-900">
                           {new Date(prescription.prescriptionDate).toLocaleDateString('en-IN')}
@@ -1310,26 +1337,26 @@ export default function PrescriptionsPage() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-slate-700">
+                    <td className="px-5 py-2 text-slate-700">
                       <p className="text-sm text-slate-900 font-bold text-emerald-600">
                         {prescription.prescriptionType === "single" ? "Single Vision" : prescription.prescriptionType === "bifocal" ? "Bifocal" : "Progressive"}
                       </p>
                     </td>
-                    <td className="px-5 py-3 text-slate-700">
+                    <td className="px-5 py-2 text-slate-700">
                       <p className="text-sm text-slate-900">
                         {prescription.od_sph}/{prescription.od_cyl}@{prescription.od_axis}°
                       </p>
                     </td>
-                    <td className="px-5 py-3 text-slate-700">
+                    <td className="px-5 py-2 text-slate-700">
                       <p className="text-sm text-slate-900">
                         {prescription.os_sph}/{prescription.os_cyl}@{prescription.os_axis}°
                       </p>
                     </td>
-                    <td className="px-5 py-3 text-slate-700">
+                    <td className="px-5 py-2 text-slate-700">
                       <p className="text-sm font-medium text-slate-900">{prescription.pd}mm</p>
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex justify-center gap-1.5">
+                    <td className="px-5 py-2">
+                      <div className="flex justify-end gap-1.5">
                         <Button
                           size="sm"
                           onClick={() => router.push(`/dashboard/pos?prescriptionId=${prescription.id}&customerId=${prescription.customerId || ''}`)}
@@ -1337,7 +1364,7 @@ export default function PrescriptionsPage() {
                           title="Create Order for this Prescription"
                         >
                           <ShoppingCart size={15} />
-                          <span className="hidden sm:inline text-xs">Create Order</span>
+                          <span className="hidden sm:inline text-xs">Order</span>
                         </Button>
 
                         <Button
@@ -1393,9 +1420,9 @@ export default function PrescriptionsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-slate-500">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalItems)} of{' '}
+        <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-sm">
+          <p className="text-xs text-slate-500 font-medium">
+            Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, totalItems)} of{' '}
             {totalItems} prescriptions
           </p>
           <div className="flex gap-2">
@@ -1404,31 +1431,41 @@ export default function PrescriptionsPage() {
               size="sm"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
+              className="h-8 rounded-lg text-xs"
             >
               Previous
             </Button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className={
-                    currentPage === page
-                      ? 'bg-slate-900 hover:bg-slate-800 text-white'
-                      : ''
-                  }
-                >
-                  {page}
-                </Button>
-              ))}
+              {getPaginationItems(currentPage, totalPages).map((item, idx) => {
+                if (typeof item === 'string') {
+                  return (
+                    <span key={`dots-${idx}`} className="px-1.5 py-1 text-xs text-slate-400 font-bold select-none">
+                      ...
+                    </span>
+                  );
+                }
+                return (
+                  <Button
+                    key={item}
+                    variant={currentPage === item ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setCurrentPage(item)}
+                    className={`h-8 w-8 rounded-lg text-xs font-semibold ${currentPage === item
+                        ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-2xs'
+                        : 'text-slate-700 hover:bg-slate-100 border-slate-200'
+                      }`}
+                  >
+                    {item}
+                  </Button>
+                );
+              })}
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
+              className="h-8 rounded-lg text-xs"
             >
               Next
             </Button>
@@ -1671,11 +1708,10 @@ export default function PrescriptionsPage() {
                         <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                           Associated Order #{viewingPrescription.orderNo || viewingPrescription.orderId}
                           <span
-                            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                              viewingPrescription.paymentStatus === 'completed'
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                : 'bg-amber-100 text-amber-800 border border-amber-300'
-                            }`}
+                            className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${viewingPrescription.paymentStatus === 'completed'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                              }`}
                           >
                             {viewingPrescription.paymentStatus || 'Ordered'}
                           </span>

@@ -581,12 +581,12 @@ export default function DashboardPage() {
                   </tr>
                 ) : (
                   recentSales.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={sale.id} className={`hover:bg-slate-50/50 transition-colors ${sale.status === 'cancelled' ? 'bg-rose-50/20 opacity-80' : ''}`}>
                       <td className="py-1.5 px-3 font-mono font-bold text-indigo-600">{sale.invoice_number}</td>
                       <td className="py-1.5 px-3 font-medium text-slate-900">
                         {sale.first_name ? `${sale.first_name} ${sale.last_name || ''}`.trim() : 'Walk-in'}
                       </td>
-                      <td className="py-1.5 px-3 text-right font-bold text-slate-900">
+                      <td className={`py-1.5 px-3 text-right font-bold ${sale.status === 'cancelled' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
                         {formatLKR(sale.net_amount)}
                       </td>
                       <td className="py-1.5 px-3 text-center">
@@ -596,12 +596,15 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-1.5 px-3 text-center">
                         <span
-                          className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-semibold ${sale.payment_status === 'completed'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                            }`}
+                          className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-semibold ${
+                            sale.status === 'cancelled'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : sale.payment_status === 'completed'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                          }`}
                         >
-                          {(sale.payment_status || 'completed').toUpperCase()}
+                          {sale.status === 'cancelled' ? 'CANCELLED' : (sale.payment_status || 'completed').toUpperCase()}
                         </span>
                       </td>
                       <td className="py-1.5 px-3 text-center">
