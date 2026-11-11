@@ -415,7 +415,7 @@ export function drawReceiptPage(doc: jsPDF, data: SalePdfData, companyDetails?: 
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  safeText(doc, `Tel: Fax: ${companyPhone} | Email: ${companyEmail} | Web: ${companyWeb}`, marginX + 15, currentY + 8.5);
+  safeText(doc, `Tel: ${companyPhone} | Email: ${companyEmail} | Web: ${companyWeb}`, marginX + 15, currentY + 8.5);
 
   currentY += 16;
 
@@ -495,16 +495,7 @@ export function drawReceiptPage(doc: jsPDF, data: SalePdfData, companyDetails?: 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
 
-  const items = data.items && data.items.length > 0 ? data.items : [
-    {
-      code: '00160072',
-      name: 'GUCCI TR90 A707 C7 TRANSPARENT 53-16 142',
-      quantity: 1,
-      discount_percentage: 20,
-      unit_price: 8950.0,
-      line_total: 7160.0
-    }
-  ];
+  const items = data.items && data.items.length > 0 ? data.items : [];
 
   let calcTotal = 0;
 

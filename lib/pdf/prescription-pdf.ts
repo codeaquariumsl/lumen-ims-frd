@@ -599,15 +599,11 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
     doc.rect(itemTableX, currentY, itemTableW, 6, 'F');
     doc.rect(itemTableX, currentY, itemTableW, 6, 'S');
 
-    // Columns: Code (22mm), Description (84mm), Rate (20mm), Qty (12mm), Dis.% (14mm), Dis.Amt (16mm), Amount (22mm)
+    // Columns: Code (26mm), Description (144mm), Qty (20mm) — prices hidden on prescription PDF
     const itemCols = [
       itemTableX,
-      itemTableX + 22,
-      itemTableX + 106,
-      itemTableX + 126,
-      itemTableX + 138,
-      itemTableX + 152,
-      itemTableX + 168,
+      itemTableX + 26,
+      itemTableX + itemTableW - 20,
       itemTableX + itemTableW,
     ];
 
@@ -621,88 +617,34 @@ export function generatePrescriptionPDF(prescription: PrescriptionData, companyD
 
     safeText('Code', itemCols[0] + 3, currentY + 4.2);
     safeText('Description', itemCols[1] + 3, currentY + 4.2);
-    safeText('Rate', itemCols[3] - 2, currentY + 4.2, { align: 'right' });
-    safeText('Qty', itemCols[4] - 2, currentY + 4.2, { align: 'right' });
-    safeText('Dis. %', itemCols[5] - 2, currentY + 4.2, { align: 'right' });
-    safeText('Dis.Amt', itemCols[6] - 2, currentY + 4.2, { align: 'right' });
-    safeText('Amount', itemCols[7] - 2, currentY + 4.2, { align: 'right' });
+    safeText('Qty', itemCols[3] - 3, currentY + 4.2, { align: 'right' });
 
     currentY += 6;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
-
-    let grandTotal = 0;
+    const descMaxWidth = itemCols[2] - itemCols[1] - 4;
 
     displayItems.forEach((item: any) => {
-      const rowH = 6;
-      const typeLabel = item.type ? `${item.type}   ` : '';
       const codeStr = `${item.code || ''}`;
-
-      const itemRate = typeof item.rate === 'number'
-        ? item.rate
-        : (parseFloat(String(item.unit_price ?? item.rate ?? 0)) || 0);
       const itemQty = typeof item.qty === 'number'
         ? item.qty
         : (parseInt(String(item.quantity ?? item.qty ?? 1), 10) || 1);
-      const itemDisPct = item.discountPercent !== undefined
-        ? Number(item.discountPercent)
-        : (Number(item.discount_percentage) || 0);
-      const itemDisAmt = item.discountAmount !== undefined
-        ? Number(item.discountAmount)
-        : (Number(item.discount_amount) || 0);
-      const itemAmt = typeof item.amount === 'number'
-        ? item.amount
-        : (parseFloat(String(item.line_total ?? item.amount ?? (itemRate * itemQty - itemDisAmt))) || 0);
-      const itemDesc = item.description || item.name || 'Optical Item';
-
-      const disPctStr = itemDisPct.toFixed(2);
-      const disAmtStr = itemDisAmt.toFixed(2);
-      const rateStr = itemRate.toFixed(2);
-      const amtStr = itemAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      grandTotal += itemAmt;
+      const itemDesc = String(item.description || item.name || 'Optical Item');
+      const descLines = doc.splitTextToSize(itemDesc, descMaxWidth);
+      const rowH = Math.max(6, descLines.length * 4 + 2);
 
       safeText(codeStr, itemCols[0] + 2, currentY + 4.2);
-      safeText(itemDesc, itemCols[1] + 2, currentY + 4.2, { maxWidth: 82 });
-      safeText(rateStr, itemCols[3] - 2, currentY + 4.2, { align: 'right' });
-      safeText(String(itemQty), itemCols[4] - 2, currentY + 4.2, { align: 'right' });
-      safeText(disPctStr, itemCols[5] - 2, currentY + 4.2, { align: 'right' });
-      safeText(disAmtStr, itemCols[6] - 2, currentY + 4.2, { align: 'right' });
-      safeText(amtStr, itemCols[7] - 2, currentY + 4.2, { align: 'right' });
+      doc.text(descLines, itemCols[1] + 2, currentY + 4.2);
+      safeText(String(itemQty), itemCols[3] - 3, currentY + 4.2, { align: 'right' });
 
       currentY += rowH;
     });
 
-    // Calculate final total
-    const finalTotal = prescription.totalAmount !== undefined && !isNaN(Number(prescription.totalAmount))
-      ? Number(prescription.totalAmount)
-      : (prescription.total_amount !== undefined && !isNaN(Number(prescription.total_amount))
-        ? Number(prescription.total_amount)
-        : (prescription.netAmount !== undefined && !isNaN(Number(prescription.netAmount))
-          ? Number(prescription.netAmount)
-          : (prescription.net_amount !== undefined && !isNaN(Number(prescription.net_amount))
-            ? Number(prescription.net_amount)
-            : grandTotal)));
-    const formattedTotal = finalTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    // Total Line
-    currentY += 2;
-    const totalLineX1 = itemCols[6];
-    const totalLineX2 = itemCols[7];
-
-    doc.setLineWidth(0.4);
-    doc.line(totalLineX1, currentY, totalLineX2, currentY);
-
-    currentY += 4.5;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    safeText(formattedTotal, totalLineX2 - 2, currentY, { align: 'right' });
-
-    // Double underline below total
-    currentY += 1.5;
-    doc.line(totalLineX1, currentY, totalLineX2, currentY);
-    doc.line(totalLineX1, currentY + 0.6, totalLineX2, currentY + 0.6);
+    currentY += 1;
+    doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+    doc.setLineWidth(0.3);
+    doc.line(itemTableX, currentY, itemTableX + itemTableW, currentY);
   }
 
   // ----------------------------------------------------
