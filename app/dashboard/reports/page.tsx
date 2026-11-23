@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,12 @@ import {
   CreditCard,
   Banknote,
   QrCode,
-  DollarSign
+  DollarSign,
+  ChevronDown,
+  ChevronRight,
+  Coins,
+  Percent,
+  BarChart3
 } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { toast } from 'sonner';
@@ -49,7 +54,8 @@ import {
   generateStockSummaryPDF,
   generateLowStockPDF,
   generateCategoryStockValuationPDF,
-  generatePaymentCollectionsPDF
+  generatePaymentCollectionsPDF,
+  generateSalesProfitPDF
 } from '@/lib/pdf-reports';
 
 export default function ReportsPage() {
@@ -57,7 +63,7 @@ export default function ReportsPage() {
   const [mainTab, setMainTab] = useState<'sales' | 'stock'>('sales');
 
   // Sub-report selections
-  const [salesSubTab, setSalesSubTab] = useState<'customer_wise' | 'item_wise' | 'sales_summary' | 'payment_collections'>('customer_wise');
+  const [salesSubTab, setSalesSubTab] = useState<'sales_profit' | 'customer_wise' | 'item_wise' | 'sales_summary' | 'payment_collections'>('sales_profit');
   const [stockSubTab, setStockSubTab] = useState<'stock_summary' | 'low_stock' | 'category_valuation'>('stock_summary');
 
   // Filters
@@ -73,6 +79,16 @@ export default function ReportsPage() {
   // Report Data States
   const [isLoading, setIsLoading] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  // Sales Profit Data & UI States
+  const [salesProfitData, setSalesProfitData] = useState<{
+    summary: any;
+    records: any[];
+    dailyTrends: any[];
+    itemRecords: any[];
+  }>({ summary: {}, records: [], dailyTrends: [], itemRecords: [] });
+  const [expandedProfitRow, setExpandedProfitRow] = useState<number | null>(null);
+  const [profitViewMode, setProfitViewMode] = useState<'invoices' | 'items'>('invoices');
 
   // Sales Data
   const [customerSalesData, setCustomerSalesData] = useState<{ summary: any; records: any[] }>({ summary: {}, records: [] });
@@ -146,7 +162,19 @@ export default function ReportsPage() {
       setIsLoading(true);
 
       if (mainTab === 'sales') {
-        if (salesSubTab === 'customer_wise') {
+        if (salesSubTab === 'sales_profit') {
+          const res = await apiClient.get('/reports/sales/profit', {
+            params: {
+              startDate,
+              endDate,
+              category: selectedCategory !== 'all' ? selectedCategory : undefined,
+              search: searchQuery,
+              paymentStatus: selectedSalesStatus !== 'all' ? selectedSalesStatus : undefined,
+              paymentMethod: selectedPaymentMethod !== 'all' ? selectedPaymentMethod : undefined,
+            }
+          });
+          setSalesProfitData(res.data?.data || { summary: {}, records: [], dailyTrends: [], itemRecords: [] });
+        } else if (salesSubTab === 'customer_wise') {
           const res = await apiClient.get('/reports/sales/customer-wise', {
             params: { startDate, endDate, search: searchQuery }
           });
@@ -219,7 +247,9 @@ export default function ReportsPage() {
       };
 
       if (mainTab === 'sales') {
-        if (salesSubTab === 'customer_wise') {
+        if (salesSubTab === 'sales_profit') {
+          generateSalesProfitPDF(filteredProfitRecords, salesProfitData.summary, filterMeta);
+        } else if (salesSubTab === 'customer_wise') {
           generateCustomerWiseSalesPDF(customerSalesData.records, customerSalesData.summary, filterMeta);
         } else if (salesSubTab === 'item_wise') {
           generateItemWiseSalesPDF(itemSalesData.records, itemSalesData.summary, filterMeta);
@@ -253,7 +283,38 @@ export default function ReportsPage() {
       let filename = 'Lumen_Report.csv';
 
       if (mainTab === 'sales') {
-        if (salesSubTab === 'customer_wise') {
+        if (salesSubTab === 'sales_profit') {
+          filename = `Sales_Profit_${startDate}_${endDate}.csv`;
+          rows = (profitViewMode === 'items' ? filteredProfitItemRecords : filteredProfitRecords).map((r: any) => {
+            if (profitViewMode === 'items') {
+              return {
+                'Product Code': r.product_code,
+                'Product Name': r.product_name,
+                'Category': r.category,
+                'Cost Price (LKR)': r.cost_price,
+                'Quantity Sold': r.quantity_sold,
+                'Avg Selling Price (LKR)': r.avg_unit_price,
+                'Net Revenue (LKR)': r.total_revenue,
+                'Total Cost (LKR)': r.total_cost,
+                'Gross Profit (LKR)': r.gross_profit,
+                'Margin %': `${r.margin_percentage?.toFixed(1) || '0.0'}%`
+              };
+            }
+            return {
+              'Invoice #': r.invoice_number,
+              'Date': r.sale_date,
+              'Customer': r.customer_name,
+              'Phone': r.customer_phone,
+              'Total Units': r.total_units,
+              'Sales Amount (LKR)': r.sales_amount,
+              'Cost Amount (LKR)': r.total_cost,
+              'Gross Profit (LKR)': r.gross_profit,
+              'Margin %': `${r.profit_margin_percentage?.toFixed(1) || '0.0'}%`,
+              'Payment Method': r.payment_method,
+              'Payment Status': r.payment_status
+            };
+          });
+        } else if (salesSubTab === 'customer_wise') {
           filename = `Customer_Sales_${startDate}_${endDate}.csv`;
           rows = customerSalesData.records.map(r => ({
             'Customer Code': r.customer_code,
@@ -363,6 +424,27 @@ export default function ReportsPage() {
       toast.error('Failed to export CSV.');
     }
   };
+
+  const filteredProfitRecords = useMemo(() => {
+    if (!searchQuery) return salesProfitData.records;
+    const q = searchQuery.toLowerCase();
+    return salesProfitData.records.filter(r =>
+      r.invoice_number?.toLowerCase().includes(q) ||
+      r.customer_name?.toLowerCase().includes(q) ||
+      r.customer_phone?.toLowerCase().includes(q) ||
+      r.payment_method?.toLowerCase().includes(q)
+    );
+  }, [salesProfitData.records, searchQuery]);
+
+  const filteredProfitItemRecords = useMemo(() => {
+    if (!searchQuery) return salesProfitData.itemRecords;
+    const q = searchQuery.toLowerCase();
+    return salesProfitData.itemRecords.filter(r =>
+      r.product_name?.toLowerCase().includes(q) ||
+      r.product_code?.toLowerCase().includes(q) ||
+      r.category?.toLowerCase().includes(q)
+    );
+  }, [salesProfitData.itemRecords, searchQuery]);
 
   const filteredCustomerRecords = useMemo(() => {
     if (!searchQuery) return customerSalesData.records;
@@ -502,6 +584,17 @@ export default function ReportsPage() {
           {mainTab === 'sales' ? (
             <>
               <button
+                onClick={() => setSalesSubTab('sales_profit')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+                  salesSubTab === 'sales_profit'
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <Coins className="h-3 w-3" />
+                Sales Profit
+              </button>
+              <button
                 onClick={() => setSalesSubTab('customer_wise')}
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                   salesSubTab === 'customer_wise'
@@ -632,7 +725,7 @@ export default function ReportsPage() {
             </>
           )}
 
-          {(salesSubTab === 'item_wise' || mainTab === 'stock') && (
+          {(salesSubTab === 'item_wise' || salesSubTab === 'sales_profit' || mainTab === 'stock') && (
             <div>
               <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Category</label>
               <select
@@ -650,9 +743,9 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {salesSubTab === 'payment_collections' && (
+          {(salesSubTab === 'payment_collections' || salesSubTab === 'sales_profit') && (
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Payment Type</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Payment Method</label>
               <select
                 value={selectedPaymentMethod}
                 onChange={(e) => setSelectedPaymentMethod(e.target.value)}
@@ -694,6 +787,393 @@ export default function ReportsPage() {
           </div>
         </div>
       </Card>
+
+      {/* ========================================================================= */}
+      {/* 0. SALES: SALES PROFIT REPORT VIEW */}
+      {/* ========================================================================= */}
+      {mainTab === 'sales' && salesSubTab === 'sales_profit' && (
+        <div className="space-y-3.5">
+          {/* Profit Summary KPI Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            <Card className="py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase text-slate-500">Sales Amount</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700">Revenue</span>
+              </div>
+              <p className="mt-1 text-sm sm:text-base font-bold text-slate-900 truncate">
+                {formatLKR(salesProfitData.summary?.totalSalesAmount || 0)}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                {(salesProfitData.summary?.totalInvoices || 0).toLocaleString()} Invoices
+              </p>
+            </Card>
+
+            <Card className="py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase text-slate-500">Total Item Cost</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700">COGS</span>
+              </div>
+              <p className="mt-1 text-sm sm:text-base font-bold text-slate-900 truncate">
+                {formatLKR(salesProfitData.summary?.totalCostAmount || 0)}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                {(salesProfitData.summary?.totalUnitsSold || 0).toLocaleString()} Units Sold
+              </p>
+            </Card>
+
+            <Card className="py-2 px-2.5 bg-white border-emerald-200/80 bg-emerald-50/20 shadow-2xs rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase text-emerald-800">Gross Profit</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">Profit</span>
+              </div>
+              <p className="mt-1 text-sm sm:text-base font-bold text-emerald-600 truncate">
+                {formatLKR(salesProfitData.summary?.totalGrossProfit || 0)}
+              </p>
+              <p className="text-[10px] text-emerald-600/80 mt-0.5">
+                Sales - Item Costs
+              </p>
+            </Card>
+
+            <Card className="py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs rounded-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase text-slate-500">Overall Margin</p>
+                <Percent className="h-3 w-3 text-indigo-500" />
+              </div>
+              <p className="mt-1 text-sm sm:text-base font-bold text-indigo-600">
+                {(salesProfitData.summary?.overallMargin || 0).toFixed(1)}%
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Margin on Sales
+              </p>
+            </Card>
+
+            <Card className="py-2 px-2.5 bg-white border-slate-200/80 shadow-2xs rounded-lg col-span-2 sm:col-span-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase text-slate-500">Avg. Profit / Sale</p>
+                <Coins className="h-3 w-3 text-amber-500" />
+              </div>
+              <p className="mt-1 text-sm sm:text-base font-bold text-slate-900 truncate">
+                {formatLKR(salesProfitData.summary?.avgProfitPerInvoice || 0)}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5 truncate">
+                Avg. Sale: {formatLKR(salesProfitData.summary?.avgSalesPerInvoice || 0)}
+              </p>
+            </Card>
+          </div>
+
+          {/* Daily Trend Chart (if multiple days in date range) */}
+          {salesProfitData.dailyTrends && salesProfitData.dailyTrends.length > 1 && (
+            <Card className="p-3 bg-white border-slate-200/80 shadow-2xs rounded-xl">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-indigo-600" />
+                    Daily Sales, Cost & Profit Trends
+                  </h3>
+                  <p className="text-[10px] text-slate-400">Comparison of daily sales amounts vs cost of goods sold vs resulting profit</p>
+                </div>
+                <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500">
+                  {salesProfitData.dailyTrends.length} Days
+                </Badge>
+              </div>
+
+              <div className="h-48 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={salesProfitData.dailyTrends} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 9, fill: '#64748B' }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E2E8F0' }}
+                      tickFormatter={(val) => formatDateStr(val)}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 9, fill: '#64748B' }}
+                      tickLine={false}
+                      axisLine={{ stroke: '#E2E8F0' }}
+                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}
+                    />
+                    <Tooltip
+                      formatter={(val: any, name: any) => [
+                        formatLKR(val),
+                        name === 'total_sales' ? 'Sales Amount' : name === 'total_cost' ? 'Cost Amount' : 'Gross Profit'
+                      ]}
+                      labelFormatter={(label) => `Date: ${formatDateStr(label)}`}
+                      contentStyle={{ backgroundColor: '#1E293B', borderRadius: '8px', color: '#fff', fontSize: '11px', border: 'none' }}
+                      itemStyle={{ color: '#fff' }}
+                      labelStyle={{ color: '#94A3B8', fontWeight: 'bold', marginBottom: '4px' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '4px' }} />
+                    <Bar dataKey="total_sales" name="Sales Amount" fill="#6366F1" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="total_cost" name="Cost Amount" fill="#F59E0B" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="gross_profit" name="Gross Profit" fill="#10B981" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          )}
+
+          {/* Table Container with View Switcher */}
+          <Card className="bg-white border-slate-200/80 shadow-2xs overflow-hidden rounded-xl">
+            <div className="px-3.5 py-2.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Sales Profit Breakdown</h3>
+                <div className="flex items-center bg-slate-200/70 p-0.5 rounded-md text-[10px]">
+                  <button
+                    onClick={() => setProfitViewMode('invoices')}
+                    className={`px-2 py-0.5 rounded font-semibold transition-all cursor-pointer ${
+                      profitViewMode === 'invoices' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    By Invoice ({filteredProfitRecords.length})
+                  </button>
+                  <button
+                    onClick={() => setProfitViewMode('items')}
+                    className={`px-2 py-0.5 rounded font-semibold transition-all cursor-pointer ${
+                      profitViewMode === 'items' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    By Product ({filteredProfitItemRecords.length})
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400">
+                  {profitViewMode === 'invoices' ? 'Click row or chevron to view item costs' : 'Aggregated sales vs item costs'}
+                </span>
+              </div>
+            </div>
+
+            {profitViewMode === 'invoices' ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+                    <tr>
+                      <th className="py-2 px-2.5 text-center w-7"></th>
+                      <th className="py-2 px-3">Invoice #</th>
+                      <th className="py-2 px-3">Date</th>
+                      <th className="py-2 px-3">Customer</th>
+                      <th className="py-2 px-3 text-center">Items</th>
+                      <th className="py-2 px-3 text-right">Sales Amount</th>
+                      <th className="py-2 px-3 text-right">Item Cost (COGS)</th>
+                      <th className="py-2 px-3 text-right">Gross Profit</th>
+                      <th className="py-2 px-3 text-center">Margin %</th>
+                      <th className="py-2 px-3 text-center">Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
+                    {filteredProfitRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="py-8 text-center text-slate-400 font-medium">
+                          No sales profit records found for the selected date range.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProfitRecords.map((row: any) => {
+                        const isExpanded = expandedProfitRow === row.sale_id;
+                        const sAmount = parseFloat(row.sales_amount || 0);
+                        const cAmount = parseFloat(row.total_cost || 0);
+                        const profit = parseFloat(row.gross_profit || (sAmount - cAmount));
+                        const marginPct = parseFloat(row.profit_margin_percentage || (sAmount > 0 ? (profit / sAmount) * 100 : 0));
+
+                        let marginBadgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                        if (marginPct >= 60) marginBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        else if (marginPct >= 40) marginBadgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                        else if (marginPct >= 20) marginBadgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                        else if (marginPct < 20) marginBadgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
+
+                        return (
+                          <Fragment key={row.sale_id}>
+                            <tr
+                              onClick={() => setExpandedProfitRow(isExpanded ? null : row.sale_id)}
+                              className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                            >
+                              <td className="py-2 px-2.5 text-center text-slate-400 group-hover:text-indigo-600">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-3.5 w-3.5 inline-block text-indigo-600" />
+                                ) : (
+                                  <ChevronRight className="h-3.5 w-3.5 inline-block" />
+                                )}
+                              </td>
+                              <td className="py-2 px-3 font-mono font-bold text-indigo-600">
+                                {row.invoice_number}
+                              </td>
+                              <td className="py-2 px-3 text-slate-600 whitespace-nowrap">
+                                {formatDateStr(row.sale_date)}
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="font-semibold text-slate-900 leading-tight">{row.customer_name}</div>
+                                {row.customer_phone && row.customer_phone !== 'N/A' && (
+                                  <div className="text-[10px] text-slate-400">{row.customer_phone}</div>
+                                )}
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                <span className="font-bold text-slate-800">{row.total_items} items</span>
+                                <span className="text-[10px] text-slate-400 block">({row.total_units} pcs)</span>
+                              </td>
+                              <td className="py-2 px-3 text-right font-bold text-slate-900">
+                                {formatLKR(sAmount)}
+                              </td>
+                              <td className="py-2 px-3 text-right font-medium text-slate-600">
+                                {formatLKR(cAmount)}
+                              </td>
+                              <td className="py-2 px-3 text-right font-bold text-emerald-600">
+                                {formatLKR(profit)}
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold border ${marginBadgeColor}`}>
+                                  {marginPct.toFixed(1)}%
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-center">
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] py-0 px-1 font-semibold uppercase ${
+                                    row.payment_status === 'completed'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  }`}
+                                >
+                                  {row.payment_status || 'completed'}
+                                </Badge>
+                              </td>
+                            </tr>
+
+                            {/* Expandable Line Items Profit Breakdown */}
+                            {isExpanded && (
+                              <tr className="bg-slate-50/90 border-y border-indigo-100">
+                                <td colSpan={10} className="p-3 pl-8">
+                                  <div className="bg-white rounded-lg border border-indigo-100/80 p-3 shadow-2xs space-y-2">
+                                    <div className="flex items-center justify-between text-[11px] pb-1 border-b border-slate-100">
+                                      <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                                        <Layers className="h-3 w-3 text-indigo-600" />
+                                        Invoice #{row.invoice_number} — Item Costs & Profit Breakdown
+                                      </span>
+                                      <span className="text-[10px] text-slate-500">
+                                        Staff: <span className="font-medium text-slate-700">{row.staff_name}</span> | Method:{' '}
+                                        <span className="font-medium text-slate-700 capitalize">{row.payment_method}</span>
+                                      </span>
+                                    </div>
+
+                                    {row.items && row.items.length > 0 ? (
+                                      <table className="w-full text-left text-[11px]">
+                                        <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                                          <tr>
+                                            <th className="py-1 px-2">Code</th>
+                                            <th className="py-1 px-2">Product Name</th>
+                                            <th className="py-1 px-2">Category</th>
+                                            <th className="py-1 px-2 text-center">Qty</th>
+                                            <th className="py-1 px-2 text-right">Unit Cost</th>
+                                            <th className="py-1 px-2 text-right">Unit Price</th>
+                                            <th className="py-1 px-2 text-right">Total Cost</th>
+                                            <th className="py-1 px-2 text-right">Line Sales</th>
+                                            <th className="py-1 px-2 text-right">Profit</th>
+                                            <th className="py-1 px-2 text-center">Margin %</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-slate-700">
+                                          {row.items.map((item: any, itmIdx: number) => {
+                                            const itemCost = parseFloat(item.item_cost || (item.quantity * item.cost_price));
+                                            const itemRev = parseFloat(item.line_total || (item.quantity * item.unit_price));
+                                            const itemProfit = parseFloat(item.item_profit || (itemRev - itemCost));
+                                            const itemMargin = itemRev > 0 ? (itemProfit / itemRev) * 100 : 0;
+
+                                            return (
+                                              <tr key={itmIdx} className="hover:bg-slate-50/50">
+                                                <td className="py-1 px-2 font-mono text-slate-500">{item.product_code}</td>
+                                                <td className="py-1 px-2 font-medium text-slate-900">{item.product_name}</td>
+                                                <td className="py-1 px-2 text-slate-500 capitalize">{item.category}</td>
+                                                <td className="py-1 px-2 text-center font-bold text-slate-800">{item.quantity}</td>
+                                                <td className="py-1 px-2 text-right text-slate-600">{formatLKR(item.cost_price)}</td>
+                                                <td className="py-1 px-2 text-right text-slate-600">{formatLKR(item.unit_price)}</td>
+                                                <td className="py-1 px-2 text-right font-medium text-slate-700">{formatLKR(itemCost)}</td>
+                                                <td className="py-1 px-2 text-right font-bold text-slate-900">{formatLKR(itemRev)}</td>
+                                                <td className="py-1 px-2 text-right font-bold text-emerald-600">{formatLKR(itemProfit)}</td>
+                                                <td className="py-1 px-2 text-center font-bold text-slate-700">{itemMargin.toFixed(1)}%</td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    ) : (
+                                      <p className="text-slate-400 text-[11px] py-1">No itemized details recorded for this invoice.</p>
+                                    )}
+
+                                    {parseFloat(row.prescription_charges || 0) > 0 && (
+                                      <div className="text-[10px] text-slate-500 pt-1 flex justify-between border-t border-slate-100">
+                                        <span>Prescription / Examination Charges:</span>
+                                        <span className="font-semibold text-slate-700">{formatLKR(row.prescription_charges)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+                    <tr>
+                      <th className="py-2 px-3">Item Code</th>
+                      <th className="py-2 px-3">Product Name</th>
+                      <th className="py-2 px-3">Category</th>
+                      <th className="py-2 px-3 text-right">Cost Price</th>
+                      <th className="py-2 px-3 text-center">Units Sold</th>
+                      <th className="py-2 px-3 text-right">Avg Unit Price</th>
+                      <th className="py-2 px-3 text-right">Total Cost (COGS)</th>
+                      <th className="py-2 px-3 text-right">Net Sales Revenue</th>
+                      <th className="py-2 px-3 text-right">Gross Profit</th>
+                      <th className="py-2 px-3 text-center">Margin %</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
+                    {filteredProfitItemRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="py-8 text-center text-slate-400 font-medium">
+                          No product sales records found.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProfitItemRecords.map((item: any, idx: number) => {
+                        const rev = parseFloat(item.total_revenue || 0);
+                        const cost = parseFloat(item.total_cost || 0);
+                        const profit = parseFloat(item.gross_profit || (rev - cost));
+                        const marginPct = rev > 0 ? ((profit / rev) * 100).toFixed(1) : '0.0';
+
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-2 px-3 font-mono font-medium text-slate-500">{item.product_code}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-900">{item.product_name}</td>
+                            <td className="py-2 px-3 text-slate-600 capitalize">{item.category}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{formatLKR(item.cost_price)}</td>
+                            <td className="py-2 px-3 text-center font-bold text-indigo-600">{item.quantity_sold}</td>
+                            <td className="py-2 px-3 text-right text-slate-600">{formatLKR(item.avg_unit_price)}</td>
+                            <td className="py-2 px-3 text-right text-slate-700">{formatLKR(cost)}</td>
+                            <td className="py-2 px-3 text-right font-bold text-slate-900">{formatLKR(rev)}</td>
+                            <td className="py-2 px-3 text-right font-bold text-emerald-600">{formatLKR(profit)}</td>
+                            <td className="py-2 px-3 text-center">
+                              <span className="font-bold text-slate-800">{marginPct}%</span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 1. SALES: CUSTOMER-WISE REPORT VIEW */}

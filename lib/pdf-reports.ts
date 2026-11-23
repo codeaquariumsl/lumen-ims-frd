@@ -1013,3 +1013,134 @@ export function generatePaymentCollectionsPDF(data: any[], summary: any, filters
   const dateTag = filters.startDate ? `${filters.startDate}_to_${filters.endDate}` : new Date().toISOString().split('T')[0];
   doc.save(`Lumen_Payment_Collections_${dateTag}.pdf`);
 }
+
+// -------------------------------------------------------------
+// 8. SALES PROFIT REPORT PDF
+// -------------------------------------------------------------
+export function generateSalesProfitPDF(
+  data: any[],
+  summary: any,
+  filters: { startDate?: string; endDate?: string; branchName?: string; category?: string }
+) {
+  const kpis = [
+    { label: 'Total Invoices', value: (summary?.totalInvoices || data.length).toString() },
+    { label: 'Total Sales Amount', value: formatLKR(summary?.totalSalesAmount || 0) },
+    { label: 'Total Cost Amount (COGS)', value: formatLKR(summary?.totalCostAmount || 0) },
+    { label: 'Total Gross Profit', value: formatLKR(summary?.totalGrossProfit || 0) },
+    { label: 'Overall Margin %', value: `${(summary?.overallMargin || 0).toFixed(1)}%` },
+  ];
+
+  const { doc, startY, margin } = createBaseDoc({
+    title: 'Sales Profit & Margin Performance Report',
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    branchName: filters.branchName,
+    kpis,
+  }, 'landscape');
+
+  const headers = [
+    ['#', 'Invoice #', 'Sale Date', 'Customer Name', 'Items / Units', 'Sales Amount (LKR)', 'Cost Price (LKR)', 'Gross Profit (LKR)', 'Margin %', 'Payment', 'Status']
+  ];
+
+  let totalSales = 0;
+  let totalCost = 0;
+  let totalProfit = 0;
+  let totalUnits = 0;
+
+  const rows = data.map((row, idx) => {
+    const sAmount = parseFloat(row.sales_amount || 0);
+    const cAmount = parseFloat(row.total_cost || 0);
+    const profit = parseFloat(row.gross_profit || (sAmount - cAmount));
+    const marginPct = sAmount > 0 ? ((profit / sAmount) * 100).toFixed(1) : '0.0';
+    const units = parseInt(row.total_units || 0);
+
+    totalSales += sAmount;
+    totalCost += cAmount;
+    totalProfit += profit;
+    totalUnits += units;
+
+    return [
+      (idx + 1).toString(),
+      row.invoice_number || 'N/A',
+      formatDateStr(row.sale_date),
+      row.customer_name || 'Walk-in Customer',
+      `${row.total_items || 1} items (${units} pcs)`,
+      sAmount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      cAmount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      profit.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      `${marginPct}%`,
+      (row.payment_status || 'completed').toUpperCase(),
+      (row.status || 'confirmed').toUpperCase()
+    ];
+  });
+
+  const overallMarginPct = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : '0.0';
+
+  const footers = [
+    [
+      'TOTAL',
+      '',
+      '',
+      `${data.length} Invoices`,
+      `${totalUnits} units`,
+      totalSales.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      totalCost.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      totalProfit.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      `${overallMarginPct}%`,
+      '',
+      ''
+    ]
+  ];
+
+  autoTable(doc, {
+    startY,
+    head: headers,
+    body: rows,
+    foot: footers,
+    theme: 'grid',
+    styles: {
+      font: 'helvetica',
+      fontSize: 7.5,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [30, 41, 59],
+      textColor: [255, 255, 255],
+      fontSize: 7.5,
+      fontStyle: 'bold',
+      cellPadding: 2.5
+    },
+    bodyStyles: {
+      fontSize: 7.5,
+      textColor: [30, 41, 59],
+      cellPadding: 2.5
+    },
+    footStyles: {
+      fillColor: [226, 232, 240],
+      textColor: [15, 23, 42],
+      fontSize: 7.5,
+      fontStyle: 'bold',
+      cellPadding: 2.5
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 8 },
+      1: { halign: 'left', cellWidth: 20 },
+      2: { halign: 'left', cellWidth: 24 },
+      3: { halign: 'left', cellWidth: 42 },
+      4: { halign: 'center', cellWidth: 25 },
+      5: { halign: 'right', cellWidth: 28 },
+      6: { halign: 'right', cellWidth: 28 },
+      7: { halign: 'right', cellWidth: 28 },
+      8: { halign: 'center', cellWidth: 18 },
+      9: { halign: 'center', cellWidth: 20 },
+      10: { halign: 'center', cellWidth: 18 },
+    },
+    margin: { left: margin, right: margin, bottom: 16 },
+  });
+
+  applyPageFooters(doc, margin);
+
+  const dateTag = filters.startDate ? `${filters.startDate}_to_${filters.endDate}` : new Date().toISOString().split('T')[0];
+  doc.save(`Lumen_Sales_Profit_Report_${dateTag}.pdf`);
+}
